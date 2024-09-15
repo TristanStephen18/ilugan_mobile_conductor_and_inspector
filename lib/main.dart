@@ -2,8 +2,8 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:iluganmobile_conductors_and_inspector/screens/splashscreen.dart';
-import 'package:iluganmobile_conductors_and_inspector/trial/shownotif.dart';
+import 'package:iluganmobile_conductors_and_inspector/screens/landingscreen.dart';
+// import 'package:iluganmobile_conductors_and_inspector/trial/shownotif.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +31,7 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  const MaterialApp(
-      home: Splashscreen(),
+      home: LandingScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

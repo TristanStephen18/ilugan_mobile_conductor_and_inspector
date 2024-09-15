@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/typechoose.dart';
 
-class Splashscreen extends StatelessWidget {
-  const Splashscreen({super.key});
+class LandingScreen extends StatelessWidget {
+  const LandingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
