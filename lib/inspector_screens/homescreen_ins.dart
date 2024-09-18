@@ -19,7 +19,7 @@ class Dashboard_Ins extends StatefulWidget {
 
 class _Dashboard_InsState extends State<Dashboard_Ins> {
   BitmapDescriptor markerIcon = BitmapDescriptor.defaultMarker;
-  Set<Marker> markers = {}; // Bus and user markers
+  Set<Marker> markers = {}; 
   late GoogleMapController mapController;
 
   @override
@@ -30,7 +30,6 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
     getCurrentLocation();
   }
 
-  // Load the custom icon for buses
   void customIcon() {
     BitmapDescriptor.fromAssetImage(
       const ImageConfiguration(size: Size(20, 20)), 
@@ -44,7 +43,6 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
     });
   }
 
-  // Listen to bus locations from Firestore
   void listenToBusLocations() {
     FirebaseFirestore.instance
         .collection('companies')
@@ -54,7 +52,6 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
         .listen((snapshot) {
       markers.removeWhere((marker) => marker.markerId.value.startsWith('bus_'));
 
-      // Add new markers for each bus's current location
       for (var doc in snapshot.docs) {
         var data = doc.data();
         GeoPoint geoPoint = data['current_location'];
@@ -74,11 +71,10 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
           ),
         );
       }
-      setState(() {}); // Update the map with new markers
+      setState(() {}); 
     });
   }
 
-  // Get the user's current location and update the map
   void getCurrentLocation() async {
     if (!await checkServicePermission()) return;
 
@@ -89,7 +85,6 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
       ),
     ).listen((position) {
       LatLng currentPosition = LatLng(position.latitude, position.longitude);
-      // Add the marker for the user's current location
       markers.removeWhere((marker) => marker.markerId.value == 'user_location');
       markers.add(
         Marker(
@@ -99,18 +94,16 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
       );
-      setToLocation(currentPosition); // Center the camera on the user's location
+      setToLocation(currentPosition); 
     });
   }
 
-  // Move camera to a specific location
   void setToLocation(LatLng position) {
     CameraPosition cameraPosition = CameraPosition(target: position, zoom: 14);
     mapController.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
-    setState(() {}); // Rebuild UI with updated camera position
+    setState(() {}); 
   }
 
-  // Check location service and permissions
   Future<bool> checkServicePermission() async {
     bool isEnabled = await Geolocator.isLocationServiceEnabled();
     if (!isEnabled) {
@@ -138,7 +131,6 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
     return true;
   }
 
-  // Logout user
   void logout() async {
     await FirebaseAuth.instance.signOut();
     Navigator.of(context).pushReplacement(

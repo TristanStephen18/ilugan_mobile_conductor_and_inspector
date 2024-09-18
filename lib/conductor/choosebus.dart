@@ -92,7 +92,7 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
       ),
       body: Center(
         child: busNumbers.isEmpty
-            ? const CircularProgressIndicator() // Show loader while fetching data
+            ? const CircularProgressIndicator() 
             : Column(
                 children: [
                   DropdownButton<String>(

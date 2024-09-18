@@ -1,12 +1,63 @@
 
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 class BusFunc {
+  final apiKey = "pk.e6e28e751bd0e401a2a07cb0cbe2e6e4";
+  final apiKeyDistance = 'KI0g89qwGyjqflqUTyKFFfC3aFub5IPflkx4L9sOkGUxqXXRXpeIpuxNII3GI1pf';
 //  final BuildContext context = BuildContext(); 
+  Future<String?> getDistance(LatLng origin, LatLng end) async {
+  try {
+    final response = await http.get(
+      Uri.parse(
+        'https://api.distancematrix.ai/maps/api/distancematrix/json?origins=${origin.latitude},${origin.longitude}&destinations=${end.latitude},${end.longitude}&key=$apiKeyDistance',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['rows'][0]['elements'][0]['distance']['text'];
+    } else {
+      print('Error fetching distance: ${response.statusCode}');
+      return null;
+    }
+  } catch (error) {
+    print('Error fetching distance: $error');
+    return null;
+  }
+}
+
+
+
+// Function to get estimated time
+Future<String?> getEstimatedTime(LatLng origin, LatLng end) async {
+  String time= "";
+  try {
+    final response = await http.get(
+      Uri.parse(
+        'https://api.distancematrix.ai/maps/api/distancematrix/json?origins=${origin.latitude},${origin.longitude}&destinations=${end.latitude},${end.longitude}&key=$apiKeyDistance',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['rows'][0]['elements'][0]['duration']['text'];
+    } else {
+      print('Error fetching estimated time: ${response.statusCode}');
+      return null;
+    }
+  } catch (error) {
+    print('Error fetching estimated time: $error');
+    return null;
+  }
+}
+
  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showbusinfo(BuildContext context, String buscompany, String busnumber, String currentlocation, int availableseats, int occupied, int reserved){
-    print('info');
     return ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         shape: RoundedRectangleBorder(

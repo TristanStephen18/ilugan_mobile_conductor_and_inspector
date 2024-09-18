@@ -35,6 +35,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
    BitmapDescriptor movingbusMarker = BitmapDescriptor.defaultMarker;
    BitmapDescriptor assignedBusMArker = BitmapDescriptor.defaultMarker;
    String iconLocation = "";
+   var helper = BusFunc();
 
   void customIconforMovingBuses() {
     BitmapDescriptor.fromAssetImage(
@@ -48,7 +49,6 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
     }).catchError((error) {
       print("Error loading custom icon: $error");
     });
-    // return movingbusMarker;
   }
 
   void customIconforAssignedBus() {
@@ -63,56 +63,81 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
     }).catchError((error) {
       print("Error loading custom icon: $error");
     });
-    // return movingbusMarker;
   }
 
 
 
   Set<Marker> markers = {};
 
-  void listenToBusLocations() {
-    FirebaseFirestore.instance
-        .collection('companies')
-        .doc(widget.compId)
-        .collection('buses')
-        .snapshots()
-        .listen((snapshot) {
-      markers.removeWhere((marker) => marker.markerId.value.startsWith('bus_'));
+  void listenToBusLocations() async {
+  FirebaseFirestore.instance
+      .collection('companies')
+      .doc(widget.compId)
+      .collection('buses')
+      .snapshots()
+      .listen((snapshot) {
+    markers.removeWhere((marker) => marker.markerId.value.startsWith('bus_'));
 
-      for (var doc in snapshot.docs) {
-        var data = doc.data();
-        if(doc.id == widget.bus_num){
+    for (var doc in snapshot.docs) {
+      var data = doc.data();
+      if (doc.id == widget.bus_num) {
         GeoPoint geoPoint = data['current_location'];
         String busNumber = data['bus_number'];
         String plateNumber = data['plate_number'];
 
         LatLng position = LatLng(geoPoint.latitude, geoPoint.longitude);
         getAssignedBus(position, busNumber, plateNumber);
-        }else{
+      } else {
         GeoPoint geoPoint = data['current_location'];
+        GeoPoint destination = data['destination_coordinates'];
         String busNumber = data['bus_number'];
         String plateNumber = data['plate_number'];
 
         LatLng position = LatLng(geoPoint.latitude, geoPoint.longitude);
-        markers.add(
-          Marker(
-            markerId: MarkerId('bus_${doc.id}'),
-            position: position,
-            infoWindow: InfoWindow(
-              title: 'Bus $busNumber',
-              snippet: 'Plate: $plateNumber',
-            ),
-            icon: movingbusMarker,
-            onTap: (){
-              BusFunc().showbusinfo(context, "buscompany", "busnumber", "currentlocation", 1, 1, 1);
-            }
-          ),
-        );
-        }
+        LatLng city_destination = LatLng(destination.latitude, destination.longitude);
+
+        // Fetch distance and estimated time asynchronously
+        helper.getDistance(position, city_destination).then((distance) {
+          helper.getEstimatedTime(position, city_destination).then((estimatedTime) {
+            // Add marker with fetched distance and estimated time
+            markers.add(
+              Marker(
+                markerId: MarkerId('bus_${doc.id}'),
+                position: position,
+                infoWindow: InfoWindow(
+                  title: 'Bus $busNumber',
+                  snippet: 'Distance: $distance Estimated Time: $estimatedTime',
+                ),
+                icon: movingbusMarker,
+                onTap: () {
+                  showDialog(context: context, 
+                  builder: (context){
+                    return Container(
+                      color: Colors.green,
+                      width: 100,
+                      height: 100,
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Text('Distance: $distance'),
+                            Text('Estimated Time: $estimatedTime')
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  );
+                },
+              ),
+            );
+            setState(() {}); // Update the UI to reflect new markers
+          });
+        });
       }
-      setState(() {}); 
-    });
-  }
+    }
+  });
+}
+
 
   late GoogleMapController mapController;
 
