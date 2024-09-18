@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:iluganmobile_conductors_and_inspector/screens/typechoose.dart';
+import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -55,7 +55,7 @@ class LandingScreen extends StatelessWidget {
                 const Gap(180),
                 OutlinedButton(
                   onPressed: (){
-                    Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>const Choosetypescreen()));
+                    Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>const LoginScreen()));
                   }, 
                   style: OutlinedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 44, 104, 46),

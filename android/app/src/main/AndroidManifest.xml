@@ -3,6 +3,8 @@
         android:label="iluganmobile_conductors_and_inspector"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyBFTetVk2_X4bi6bMsEn9t5qGll7DfW8Mc"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
