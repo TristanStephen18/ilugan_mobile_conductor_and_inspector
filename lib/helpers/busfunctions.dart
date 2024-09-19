@@ -57,6 +57,26 @@ Future<String?> getEstimatedTime(LatLng origin, LatLng end) async {
   }
 }
 
+Future<String> reverseGeocode(double lat, double lon) async {
+  const String apiKey = "pk.e6e28e751bd0e401a2a07cb0cbe2e6e4";
+  final String url =
+      "https://us1.locationiq.com/v1/reverse.php?key=$apiKey&lat=$lat&lon=$lon&format=json";
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['display_name']; // Return the address from the response
+    } else {
+      return "Address not available";
+    }
+  } catch (error) {
+    print("Error fetching address: $error");
+    return "Address not available";
+  }
+}
+
  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showbusinfo(BuildContext context, String buscompany, String busnumber, String currentlocation, int availableseats, int occupied, int reserved){
     return ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

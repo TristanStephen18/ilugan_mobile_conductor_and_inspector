@@ -1,4 +1,7 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class Appdrawers extends StatelessWidget {
   Appdrawers({
@@ -11,16 +14,21 @@ class Appdrawers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(   
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.white,
       child: ListView(
         children: [
           DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.green,
+            ),
             child: const Text('Ilugan')
           ),
-          // Divider(height: 2,),
-          ListTile(
-            title: Text('Log out'),
-            onTap: logoutfunc,
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ListTile(
+              title: Text('Log out'),
+              onTap: logoutfunc,
+            ),
           )
         ],
       ),

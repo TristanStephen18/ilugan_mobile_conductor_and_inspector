@@ -113,7 +113,7 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
                   ),
                   ElevatedButton(onPressed: () {
                     assigntobus(choice);
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=>Dashboard_Con(compId: widget.compId, bus_num: choice,)));
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=>Dashboard_Con(compId: widget.compId, bus_num: choice, conID: widget.conductorId)));
                   }, child: const Text('Next'))
                 ],
               ),

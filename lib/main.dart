@@ -64,7 +64,7 @@ class HomeScreenSelector extends StatelessWidget {
           String companyId = snapshot.data!['companyId'] ?? '';
 
           if (userType == 'conductor') {
-            return Dashboard_Con(compId: companyId, bus_num: "",);
+            return Dashboard_Con(compId: companyId, bus_num: "", conID: FirebaseAuth.instance.currentUser!.uid,);
           } else if (userType == 'inspector') {
             return Dashboard_Ins(compId: companyId);
           } else {
