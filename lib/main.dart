@@ -3,8 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:iluganmobile_conductors_and_inspector/AuthService.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
-import 'package:iluganmobile_conductors_and_inspector/inspector_screens/homescreen_ins.dart';
+import 'package:iluganmobile_conductors_and_inspector/helpers/screenselector.dart';
 import 'firebase_options.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/landingscreen.dart';
 
@@ -45,35 +44,6 @@ class MainApp extends StatelessWidget {
         },
       ),
       debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-class HomeScreenSelector extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final authService = AuthService();
-    
-    return FutureBuilder<Map<String, String>>(
-      future: authService.getUserTypeAndCompanyId(FirebaseAuth.instance.currentUser!.email!),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        } else if (snapshot.hasData) {
-          String userType = snapshot.data!['type'] ?? '';
-          String companyId = snapshot.data!['companyId'] ?? '';
-
-          if (userType == 'conductor') {
-            return Dashboard_Con(compId: companyId, bus_num: "", conID: FirebaseAuth.instance.currentUser!.uid,);
-          } else if (userType == 'inspector') {
-            return Dashboard_Ins(compId: companyId);
-          } else {
-            return const LandingScreen();  // Fallback for unknown user types
-          }
-        } else {
-          return const LandingScreen();  // In case of any errors or missing data
-        }
-      },
     );
   }
 }

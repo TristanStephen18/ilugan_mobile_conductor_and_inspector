@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/other_buses.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/notifications.dart';
 import 'package:iluganmobile_conductors_and_inspector/helpers/busfunctions.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
@@ -211,18 +211,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Appdrawers(
-        logoutfunc: logout,
-      ),
-      appBar: AppBar(
-        actions: [
-          IconButton(onPressed: (){
-            Navigator.of(context).push(MaterialPageRoute(builder: (_)=> SampleScree(compId: widget.compId, bus_num: widget.bus_num, conID: widget.conID.toString())));
-          }, icon: Icon(Icons.move_down))
-        ],
-      ),
-      body: SafeArea(
+    return SafeArea(
         child: GoogleMap(
           initialCameraPosition: const CameraPosition(
               target: LatLng(15.975949534874196, 120.57135500752592), zoom: 12),
@@ -232,7 +221,6 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
           },
           markers: markers,
         ),
-      ),
-    );
+      );
   }
 }
