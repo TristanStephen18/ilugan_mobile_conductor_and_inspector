@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gap/gap.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Appdrawers extends StatelessWidget {
   Appdrawers({
@@ -196,6 +197,32 @@ class _BotNavBar4ConductorState extends State<BotNavBar4Conductor> {
           },
         ),
       ][currentpageindex],
+    );
+  }
+}
+
+class Texts extends StatelessWidget {
+  Texts({
+    super.key,
+    required this.content,
+    this.color,
+    this.fontsize,
+    this.weight
+  });
+  String content = "";
+  Color? color = Colors.white;
+  FontWeight? weight = FontWeight.normal;
+  double? fontsize = 15;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      content, 
+      style: GoogleFonts.inter(
+        fontSize: fontsize,
+        fontWeight: weight,
+        color: color,
+      ),
     );
   }
 }

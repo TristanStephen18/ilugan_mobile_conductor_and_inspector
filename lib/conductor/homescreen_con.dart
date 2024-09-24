@@ -3,10 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/notifications.dart';
 import 'package:iluganmobile_conductors_and_inspector/helpers/busfunctions.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
-import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 
 // ignore: camel_case_types
 class Dashboard_Con extends StatefulWidget {
