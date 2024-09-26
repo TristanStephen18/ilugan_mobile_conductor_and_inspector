@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/reservations.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/scannerscreen.dart';
+import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 
 class ConductorScreens extends StatefulWidget {
@@ -16,6 +18,13 @@ class ConductorScreens extends StatefulWidget {
 }
 
 class _ConductorScreensState extends State<ConductorScreens> {
+
+   void logout() async {
+    await FirebaseAuth.instance.signOut();
+    // ignore: use_build_context_synchronously
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+  }
 
   int currentpageindex= 0;
   @override
@@ -35,7 +44,7 @@ class _ConductorScreensState extends State<ConductorScreens> {
             IconButton(onPressed: (){}, icon: const Icon(Icons.notifications))
           ],
         ),
-        drawer: Appdrawers(logoutfunc: (){},),
+        drawer: Appdrawers(logoutfunc: logout,),
         bottomNavigationBar: NavigationBar(
           onDestinationSelected: (int index){
             setState(() {
@@ -68,6 +77,19 @@ class _ConductorScreensState extends State<ConductorScreens> {
           // TicketScanner(),
           Reservations()       
           ][currentpageindex],
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 20.0),
+          child: Visibility(
+            visible: true,
+              child: SizedBox(
+                height: 80,
+                width:  80,
+                  child: FloatingActionButton(
+            onPressed: (){},
+            child: const Icon(Icons.qr_code_scanner_outlined, size: 80,),
+          ))),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
   }
