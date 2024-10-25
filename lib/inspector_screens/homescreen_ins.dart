@@ -36,7 +36,7 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
   void customIcon() {
     BitmapDescriptor.fromAssetImage(
       const ImageConfiguration(size: Size(20, 20)), 
-      "assets/images/icons/moving_bus_icon.png"
+      "assets/images/icons/bicon.png"
     ).then((icon) {
       setState(() {
         markerIcon = icon;
@@ -296,7 +296,7 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        drawer: Appdrawers(logoutfunc: logout),
+        // drawer: Appdrawers(logoutfunc: logout),
         appBar: AppBar(
           title: const Text('Inspector Dashboard'),
           centerTitle: true,

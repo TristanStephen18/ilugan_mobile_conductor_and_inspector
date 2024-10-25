@@ -1,8 +1,12 @@
+// ignore_for_file: must_be_immutable, avoid_print, use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
+import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 
 class ChooseBusScreen extends StatefulWidget {
   ChooseBusScreen({
@@ -22,7 +26,7 @@ class ChooseBusScreen extends StatefulWidget {
 
 class _ChooseBusScreenState extends State<ChooseBusScreen> {
   String? selectedBus;
-  List<String> busNumbers = [];
+  List<Map<String, dynamic>> busList = [];  // List to hold bus data (number and conductor)
   String? choice = "";
 
   @override
@@ -31,22 +35,24 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
     fetchBusNumbers();
   }
 
-  void assigntobus(String? bus_num){
-  FirebaseFirestore.instance
-      .collection('companies')    
-      .doc(widget.compId)               
-      .collection('buses')        
-      .doc(choice)                
-      .update({
-        'conductor': widget.conname,  
-      }).then((_) {
-        print("Bus conductor updated successfully!");
-      }).catchError((error) {
-        print("Failed to update bus conductor: $error");
-      });
-    FirebaseFirestore.instance.collection('ilugan_mobile_users').doc(widget.conductorId).update(
+  void assigntobus() {
+    FirebaseFirestore.instance
+        .collection('companies')    
+        .doc(widget.compId)               
+        .collection('buses')        
+        .doc(choice)                
+        .update({
+          'conductor': widget.conname,  
+        }).then((_) {
+          print("Bus conductor updated successfully!");
+        }).catchError((error) {
+          print("Failed to update bus conductor: $error");
+        });
+
+    FirebaseFirestore.instance.collection('companies').doc(widget.compId).collection('employees').doc(widget.conductorId).
+    update(
       {
-        'inbus' : choice
+        'inbus': choice
       }
     ).then((_) {
         print("User Conductor updated successfully!");
@@ -63,11 +69,15 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
           .collection('buses')
           .get();
 
-      List<String> fetchedBusNumbers =
-          busesSnapshot.docs.map((doc) => doc.id.toString()).toList();
+      List<Map<String, dynamic>> fetchedBusList = busesSnapshot.docs.map((doc) {
+        return {
+          'busNumber': doc.id,
+          'conductor': doc['conductor']  // Fetch conductor info for each bus
+        };
+      }).toList();
 
       setState(() {
-        busNumbers = fetchedBusNumbers;
+        busList = fetchedBusList;
       });
       
     } catch (e) {
@@ -78,46 +88,102 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
   void logout() async {
     await FirebaseAuth.instance.signOut();
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => LoginScreen()));
+        .push(MaterialPageRoute(builder: (_) => const LoginScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // backgroundColor: Colors.green,
       appBar: AppBar(
-        title: const Text('Choose a Bus'),
-        actions: [
-          IconButton(onPressed: logout, icon: const Icon(Icons.exit_to_app))
+        centerTitle: true,
+        toolbarHeight: 60,
+        title: CustomText(content: 'Conductor', fsize: 
+        30, fontcolor: Colors.yellowAccent, fontweight: FontWeight.w500,),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.yellow,
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        actions: const [
+          Image(
+            image: AssetImage("assets/images/logo.png"),
+            height: 50,
+            width: 50,
+          ),
+          Gap(10)
         ],
+        backgroundColor: Colors.redAccent,
       ),
-      body: Center(
-        child: busNumbers.isEmpty
-            ? const CircularProgressIndicator() 
-            : Column(
-                children: [
-                  DropdownButton<String>(
-                    value: selectedBus,
-                    hint: const Text('Select Bus Number'),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedBus = newValue;
-                        choice = selectedBus;
-                      });
-                    },
-                    items: busNumbers.map((String busNumber) {
-                      return DropdownMenuItem<String>(
-                        value: busNumber,
-                        child: Text(busNumber),
-                      );
-                    }).toList(),
-                  ),
-                  ElevatedButton(onPressed: () {
-                    assigntobus(choice);
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=>Dashboard_Con(compId: widget.compId, bus_num: choice, conID: widget.conductorId)));
-                  }, child: const Text('Next'))
-                ],
+      body: busList.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : GridView.builder(
+              padding: const EdgeInsets.all(10),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
               ),
-      ),
+              itemCount: busList.length,
+              itemBuilder: (context, index) {
+                String busNumber = busList[index]['busNumber'];
+                String? conductor = busList[index]['conductor'];
+                bool isAssigned = conductor != null && conductor.isNotEmpty;
+
+                return GestureDetector(
+                  onTap: isAssigned
+                      ? null  // Disable tap if the bus is already assigned
+                      : () {
+                          setState(() {
+                            selectedBus = busNumber;
+                            choice = selectedBus;
+                          });
+                        },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isAssigned ? const Color.fromARGB(255, 136, 134, 134) : (selectedBus == busNumber ? Colors.redAccent : Colors.white),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.black, width: 2),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          const Image(image: AssetImage('assets/images/icons/choose.png')),
+                          const Spacer(),
+                          CustomText(
+                            content: busNumber,
+                            fontcolor: isAssigned ? Colors.black45 : Colors.black,
+
+                          ),
+                          const Gap(10),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: selectedBus != null
+          ? FloatingActionButton(
+              onPressed: () {
+                assigntobus();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => Dashboard_Con(
+                      compId: widget.compId,
+                      bus_num: choice,
+                      conID: widget.conductorId,
+                    ),
+                  ),
+                );
+              },
+              child: const Icon(Icons.arrow_forward),
+            )
+          : null,
     );
   }
 }

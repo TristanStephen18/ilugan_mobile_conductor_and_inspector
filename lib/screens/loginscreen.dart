@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/choosebus.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/homescreen_ins.dart';
+import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 
@@ -106,82 +107,70 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green,
+      // backgroundColor: Colors.redAccent,
       appBar: AppBar(
-        backgroundColor: Colors.green,
+        centerTitle: true,
+        toolbarHeight: 60,
+        title: CustomText(content: 'ILugan', fsize: 
+        30, fontcolor: Colors.yellowAccent, fontweight: FontWeight.w500,),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.yellow,
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         actions: const [
-          Padding(
-            padding: EdgeInsets.all(3.0),
-            child: Image(image: AssetImage("assets/images/logo.png")),
-          )
+          Image(
+            image: AssetImage("assets/images/logo.png"),
+            height: 50,
+            width: 50,
+          ),
+          Gap(10)
         ],
+        backgroundColor: Colors.redAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
+        // child: SingleChildScrollView(
           child: Form(
             key: formkey, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Hello",
-                  style: TextStyle(fontSize: 40, color: Colors.white),
+                const Gap(10),
+                CustomText(
+                  content: "Log In",
+                  fsize: 30,
+                  fontcolor: Colors.black,
+                  fontweight: FontWeight.bold,
                 ),
-                const Gap(20),
-                const Text(
-                  "Welcome to Ilugan! Kindly Log in your company issued account!",
-                  style: TextStyle(fontSize: 20, color: Colors.white),
+                const Gap(10),
+                CustomText(
+                  content: "Kindly Log in your company issued account.",
+                  fsize: 20,
+                  fontcolor: Colors.black,
+                  fontweight: FontWeight.bold,
                 ),
                 const Gap(40),
-                const Text("Email"),
+                CustomText(content: "Email", fontcolor: Colors.black,),
                 const Gap(5),
-                TextFormField(
-                  controller: emailcon,
-                  decoration: const InputDecoration(
-                      hoverColor: Colors.white,
-                      border: UnderlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10))),
-                      filled: true,
-                      fillColor: Colors.white),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
+                LoginTfields(field_controller: emailcon, label: "e.g employee@email.com", suffixicon: Icons.email,),
                 const Gap(20),
-                const Text("Password"),
+                CustomText(content: "Password", fontcolor: Colors.black,),
                 const Gap(5),
-                TextFormField(
-                  controller: passcon,
-                  decoration: const InputDecoration(
-                      border: UnderlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10))),
-                      filled: true,
-                      fillColor: Colors.white),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-                const Gap(50),
+                LoginPassTfields(field_controller: passcon, showpassIcon: Icons.visibility, hidepassIcon: Icons.visibility_off, showpass: true),
+                const Spacer(),
                 Center(
-                  child: ElevatedButton(
-                    onPressed: checklogin,
-                    style: ElevatedButton.styleFrom(
-                      fixedSize: Size(MediaQuery.sizeOf(context).width / 2, 50),
-                    ),
-                    child: const Text("Log In"),
-                  ),
+                  child: Ebuttons(func: checklogin, label: "Log In", bcolor: Colors.redAccent, fcolor: Colors.white, width: MediaQuery.sizeOf(context).width/1.3, height: 70, tsize: 25,)
                 ),
+                const Spacer(),
               ],
             ),
           ),
-        ),
+        // ),
       ),
     );
   }
