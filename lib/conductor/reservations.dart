@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
+import 'package:intl/intl.dart';
 import 'package:status_alert/status_alert.dart';
 
 class Reservations extends StatefulWidget {
@@ -203,16 +205,9 @@ class ToAccomplish extends StatelessWidget {
             return Card(
               elevation: 10,
               child: ListTile(
-                title: Column(
-                  children: [
-                    Text("From: ${doc['from']}"),
-                    Text('To: ${doc['to']}')
-                  ],
-                ),
-                subtitle: Text("Seats: ${doc['seats_reserved']}"),
-                trailing: Text('P ${doc['amount'].toString()}', style: TextStyle(
-                  fontSize: 20
-                ),),
+                title: CustomText(content: 'Reservation #${doc.id}'),
+                subtitle: CustomText(content: 'Date: ${DateFormat('MM-dd-yyyy - hh:mm a').format(doc['date_time'].toDate())}'),
+                trailing: const Icon(Icons.pending)
               ),
             );
           }).toList(),
@@ -248,18 +243,15 @@ class Accomplished extends StatelessWidget {
         }
         return ListView(
           children: snapshot.data!.docs.map((doc) {
+
+            // DateTime datentime = doc['date_and_time'].toDate(); 
             return Card(
               elevation: 10,
               child: ListTile(
-                tileColor: Colors.green,
-                title: Column(
-                  children: [
-                    Text("From: ${doc['from']}"),
-                    Text('To: ${doc['to']}')
-                  ],
-                ),
-                subtitle: Text("Seats: ${doc['seats_reserved']}"),
-                trailing: Icon(Icons.check)
+                // tileColor: Colors.green,
+                title: CustomText(content: 'Reservation #${doc.id}'),
+                subtitle: CustomText(content: 'Date: ${doc['date_time'].toDate()}'),
+                trailing: const Icon(Icons.check)
               ),
             );
           }).toList(),

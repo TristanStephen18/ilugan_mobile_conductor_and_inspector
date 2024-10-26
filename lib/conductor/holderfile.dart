@@ -2,6 +2,7 @@
 
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 // import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 // import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
@@ -34,6 +35,22 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
   void initState() {
     super.initState();
     print(widget.companyId + " " + widget.busnum);
+  }
+
+  void openScanner() async {
+    final lineColor = '#ffffff';
+    final cancelButtonText = 'CANCEL';
+    final isShowFlashIcon = true;
+    final scanMode = ScanMode.DEFAULT;
+    final qr = await FlutterBarcodeScanner.scanBarcode(
+        lineColor, cancelButtonText, isShowFlashIcon, scanMode).then((value) {
+          // setState(() {
+          //   output = value;
+          // });
+          // ignore: avoid_print
+          print(value);
+        },
+        );
   }
 
   // void logout() async {
@@ -107,9 +124,7 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
         height: 100, // Adjust height to make the FAB taller
         width: 100, // Adjust width if necessary
         child: FloatingActionButton(
-          onPressed: () {
-            // Define your action
-          },
+          onPressed: openScanner,
           tooltip: "Scan Passengers Ticket",
           child: const Icon(Icons.qr_code_scanner, size: 80, color: Colors.redAccent,),
         ),

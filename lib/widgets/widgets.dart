@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // import 'package:flutter/widgets.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/busviewer.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/holderfile.dart';
 
 class Appdrawers extends StatelessWidget {
@@ -97,8 +98,8 @@ class Appdrawers extends StatelessWidget {
                     color: Colors.red,
                   ),
                   onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(
-                    //     builder: (_) => const ProfileScreen()));
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => BusesScreen(busnum: busnum, compId: compID,)));
                   },
                   hoverColor: Colors.green,
                 ),

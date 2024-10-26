@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 // import 'package:gap/gap.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/auth.dart';
@@ -38,6 +39,11 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   Set<Marker> markers = {};
   late GoogleMapController mapController;
   final BusFunc helper = BusFunc();
+  int available_seats = 0;
+  int occupied = 0;
+  int reserved = 0;
+  String terminal = "";
+  String destination="";
 
   @override
   void initState() {
@@ -55,12 +61,15 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
     await _loadCustomMarkers();
     _listenToBusLocations();
     getuserdata();
+    // await Data().getcompanyname();
   }
 
   String email = "";
   String name = "";
   String id = "";
   String budocID = "";
+  String? comapnyname;
+
 
   void getuserdata() async {
     var data = await Data().getEmployeeData(widget.compId);
@@ -73,7 +82,37 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
     });
 
     print(email + name + id + busNum.toString());
+    getBusRealtimeData(companyId.toString(), busNum.toString());
+    String? cname = await Data().getcompanyname(companyId.toString());
+    setState(() {
+      comapnyname = cname;
+    });
+    // setState(() {
+      
+    // });
   }
+
+  void getBusRealtimeData(String companyid, String busnum) {
+    FirebaseFirestore.instance
+      .collection('companies')
+      .doc(companyid)
+      .collection('buses')
+      .doc(busnum).snapshots().listen((DocumentSnapshot snapshot){
+        if(snapshot.exists){
+          var data = snapshot.data() as Map<String, dynamic>;
+          setState(() {
+            available_seats = data['available_seats'];
+            reserved = data['reserved_seats'];
+            occupied = data['occupied_seats'];
+            terminal = data['terminalloc'];
+            destination = data['destination'];
+          });
+          print(data);
+        }else{  
+          print('Document does not exist');
+        }
+      });
+}
 
   Future<void> _loadCustomMarkers() async {
     try {
@@ -192,7 +231,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   }
 
   Future<void> logout() async {
-    Auth().onLogout(widget.compId, busNum.toString(),
+     await Auth().onLogout(widget.compId, busNum.toString(),
         FirebaseAuth.instance.currentUser!.uid);
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
@@ -218,10 +257,13 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
           centerTitle: true,
           toolbarHeight: 60,
           title: CustomText(
-            content: 'ILugan',
-            fsize: 30,
+            content: comapnyname != null ? comapnyname.toString() : 'Loading...',
+            fsize: 20,
             fontcolor: Colors.yellowAccent,
             fontweight: FontWeight.w500,
+          ),
+          iconTheme: const IconThemeData(
+            color: Colors.white
           ),
           actions: const [
             Image(
@@ -266,71 +308,103 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Sample currentlocation ------------------------------------- > Destination',
-                        style: TextStyle(
+                      Row(
+                        children: [
+                          CustomText(content: 'Route', fontweight: FontWeight.bold,),
+                          const Gap(3),
+                          const Icon(Icons.location_on)
+                        ],
+                      ),
+                      Text(
+                        '$terminal ------------------------------------- > $destination',
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Row(
+                        children: [
+                          CustomText(content: 'Seats', fontweight: FontWeight.bold,),
+                           const Gap(3),
+                          const Icon(Icons.chair)
+                        ],
+                      ),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Three grey boxes
-                          Container(
-                            width: 70,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                '1',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
+                          Column(
+                            children: [
+                              CustomText(content: 'Available'),
+                              Container(
+                                width: 70,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    available_seats.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          Container(
-                            width: 70,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                '2',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
+                          Column(
+                            children: [
+                              CustomText(content: 'Reserved'),
+                              Container(
+                                width: 70,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    reserved.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          Container(
-                            width: 70,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                '3',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
+                          Column(
+                            children: [
+                              CustomText(content: 'Occupied'),
+                              Container(
+                                width: 70,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    occupied.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
+                      // Center(
+                      //   child: ,
+                      // )
                     ],
                   ),
                 ),
@@ -361,9 +435,9 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                       width: 70,
                     ),
                     const SizedBox(height: 5),
-                    const Text(
-                      'Bus #1234', // Default bus number text
-                      style: TextStyle(
+                    Text(
+                      busNum.toString(), 
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),

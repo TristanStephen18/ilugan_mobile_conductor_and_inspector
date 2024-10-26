@@ -28,6 +28,36 @@ class Data {
     return null;
   }
 }
+
+void getBusRealtimeData(String companyid, String busnum) {
+    FirebaseFirestore.instance
+      .collection('companies')
+      .doc(companyid)
+      .collection('buses')
+      .doc(busnum).snapshots().listen((DocumentSnapshot snapshot){
+        if(snapshot.exists){
+          var data = snapshot.data();
+          print(data);
+        }else{  
+          print('Document does not exist');
+        }
+      });
+}
+
+Future<String?> getcompanyname(String id)async {
+  DocumentSnapshot snapshots = await FirebaseFirestore.instance
+      .collection('companies')
+      .doc(id)
+      .get();
+
+      if(snapshots.exists){
+        var data = snapshots.data() as Map<String, dynamic>;
+        return data['company_name'];
+        // return 
+      }else{
+        print('error fetching comapny name');
+      }
+}
 }
 
 
