@@ -2,22 +2,51 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/viewbus.dart';
+import 'package:iluganmobile_conductors_and_inspector/inspector_screens/viewbus.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 
 class BusesScreen extends StatefulWidget {
-  BusesScreen({super.key, required this.compId, required this.busnum});
+  BusesScreen({super.key, required this.compId});
 
   final String compId;
-  final String busnum;
+  // final String busnum;
 
   @override
   State<BusesScreen> createState() => _BusesScreenState();
 }
 
 class _BusesScreenState extends State<BusesScreen> {
-  final CarouselSliderController _controller = CarouselSliderController();
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
   int _currentIndex = 0;
+  List<Map<String, dynamic>> _busData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBusData(); // Fetch data once during initialization
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  // Fetch data from Firestore only once and store in `_busData`
+  Future<void> _fetchBusData() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('companies')
+        .doc(widget.compId)
+        .collection('buses')
+        .get();
+
+    setState(() {
+      // Filter out documents where doc.id == widget.busnum
+      _busData = snapshot.docs
+          .map((doc) => doc.data())
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,109 +66,101 @@ class _BusesScreenState extends State<BusesScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('companies')
-            .doc(widget.compId)
-            .collection('buses')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No buses found"));
-          }
+      body: _busData.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : _buildBusesContent(context),
+    );
+  }
 
-          // Convert Firestore snapshot to a list of maps
-          final busData = snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CarouselSlider.builder(
-                        itemCount: busData.length,
-                        itemBuilder: (context, index, realIndex) {
-                          return Container(
-                            margin: const EdgeInsets.all(6.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8.0),
-                              image: const DecorationImage(
-                                image: AssetImage('assets/images/icons/choose.png'),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          );
-                        },
-                        carouselController: _controller,
-                        options: CarouselOptions(
-                          height: 170.0,
-                          enableInfiniteScroll: true,
-                          aspectRatio: 16 / 9,
-                          onPageChanged: (index, reason) {
-                            setState(() {
-                              _currentIndex = index;
-                            });
-                          },
+  Widget _buildBusesContent(BuildContext context) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                CarouselSlider.builder(
+                  itemCount: _busData.length,
+                  itemBuilder: (context, index, realIndex) {
+                    return Container(
+                      margin: const EdgeInsets.all(6.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.0),
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/icons/choose.png'),
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      Positioned(
-                        left: 20,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                          onPressed: () {
-                            _controller.previousPage();
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        right: 20,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios, color: Colors.black),
-                          onPressed: () {
-                            _controller.nextPage();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Gap(20),
-                  CustomText(
-                    content: busData[_currentIndex]['bus_number'] ?? 'N/A',
-                    fontweight: FontWeight.bold,
-                    fsize: 20,
-                  ),
-                  const Gap(10),
-                  _buildBusDetailsContainer(context, busData[_currentIndex]),
-                  const Gap(20),
-                  Ebuttons(
-                    func: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_)=> BusViewer(busnum: busData[_currentIndex]['plate_number'], compId: widget.compId)));
+                    );
+                  },
+                  carouselController: _carouselController,
+                  options: CarouselOptions(
+                    height: 170.0,
+                    enableInfiniteScroll: true,
+                    aspectRatio: 16 / 9,
+                    onPageChanged: (index, reason) {
+                      setState(() {
+                        _currentIndex = index;
+                      });
                     },
-                    label: 'View in Map',
-                    bcolor: Colors.greenAccent,
-                    fcolor: Colors.black,
-                    fontweight: FontWeight.bold,
-                    height: 50,
-                    tsize: 22,
-                    width: MediaQuery.sizeOf(context).width - 50,
                   ),
-                ],
-              ),
+                ),
+                Positioned(
+                  left: 20,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                    onPressed: () {
+                      _carouselController.previousPage();
+                    },
+                  ),
+                ),
+                Positioned(
+                  right: 20,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios,
+                        color: Colors.black),
+                    onPressed: () {
+                      _carouselController.nextPage();
+                    },
+                  ),
+                ),
+              ],
             ),
-          );
-        },
+            const Gap(20),
+            CustomText(
+              content: _busData[_currentIndex]['bus_number'] ?? 'N/A',
+              fontweight: FontWeight.bold,
+              fsize: 20,
+            ),
+            const Gap(10),
+            _buildBusDetailsContainer(context, _busData[_currentIndex]),
+            const Gap(20),
+            Ebuttons(
+              func: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => BusViewer(
+                        busnum: _busData[_currentIndex]['plate_number'],
+                        compId: widget.compId)));
+              },
+              label: 'View in Map',
+              bcolor: Colors.greenAccent,
+              fcolor: Colors.black,
+              fontweight: FontWeight.bold,
+              height: 50,
+              tsize: 22,
+              width: MediaQuery.of(context).size.width - 50,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBusDetailsContainer(BuildContext context, Map<String, dynamic> bus) {
+  Widget _buildBusDetailsContainer(
+      BuildContext context, Map<String, dynamic> bus) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -164,7 +185,9 @@ class _BusesScreenState extends State<BusesScreen> {
           const Divider(thickness: 2, color: Colors.black),
           const Gap(8),
           CustomText(
-            content: bus['conductor'] != "" ? "Conductor: ${bus['conductor']}" : "Conductor: None",
+            content: bus['conductor'] != ""
+                ? "Conductor: ${bus['conductor']}"
+                : "Conductor: None",
           ),
           const Gap(8),
           Row(

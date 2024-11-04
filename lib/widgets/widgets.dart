@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 // import 'package:flutter/widgets.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/busviewer.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/alerting.dart';
+import 'package:iluganmobile_conductors_and_inspector/inspector_screens/busviewer.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/holderfile.dart';
 
 class Appdrawers extends StatelessWidget {
@@ -90,6 +91,135 @@ class Appdrawers extends StatelessWidget {
                 const Divider(),
                 ListTile(
                   title: CustomText(
+                    content: 'Profile',
+                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                  ),
+                  leading: const Icon(
+                    Icons.person,
+                    color: Colors.red,
+                  ),
+                  hoverColor: Colors.green,
+                  onTap: () {
+                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  title: CustomText(
+                    content: 'Inspector Locations',
+                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                  ),
+                  leading: const Icon(
+                    Icons.people,
+                    color: Colors.red,
+                  ),
+                  hoverColor: Colors.green,
+                  onTap: () {
+                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  title: CustomText(
+                    content: 'Alert',
+                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                  ),
+                  leading: const Icon(
+                    Icons.message,
+                    color: Colors.red,
+                  ),
+                  hoverColor: Colors.green,
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=> CategoryScreen(busnum: busnum, companyId: compID,)));
+                  },
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            onTap: logoutfunc,
+            title: CustomText(
+              content: 'Log Out',
+              fontcolor: const Color.fromARGB(255, 104, 103, 103),
+            ),
+            leading: const Icon(
+              Icons.logout,
+              color: Colors.red,
+            ),
+            hoverColor: Colors.red,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class InsAppdrawers extends StatelessWidget {
+  InsAppdrawers(
+      {super.key,
+      required this.logoutfunc,
+      required this.insid,
+      required this.insname,
+      required this.compID,
+      });
+
+  VoidCallback logoutfunc;
+  String insname;
+  String insid;
+  String compID;
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              children: [
+                DrawerHeader(
+                    decoration: const BoxDecoration(
+                      color: Colors.redAccent,
+                    ),
+                    child: Column(
+                      children: [
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                const Gap(20),
+                                const CircleAvatar(
+                                  backgroundImage: AssetImage(
+                                      'assets/images/icons/conductor_icon.png'),
+                                  radius: 50,
+                                ),
+                                const Gap(20),
+                                Column(
+                                  children: [
+                                    CustomText(
+                                      content: insname.toUpperCase(),
+                                      fontcolor: Colors.white,
+                                      fsize: 14,
+                                      fontweight: FontWeight.bold,
+                                    ),
+                                    CustomText(
+                                      content: insid.toUpperCase(),
+                                      fontcolor: Colors.white,
+                                      fontweight: FontWeight.w600,
+                                      fsize: 12,
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
+                    )),
+                ListTile(
+                  title: CustomText(
                     content: 'Buses',
                     fontcolor: const Color.fromARGB(255, 104, 103, 103),
                   ),
@@ -99,7 +229,7 @@ class Appdrawers extends StatelessWidget {
                   ),
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => BusesScreen(busnum: busnum, compId: compID,)));
+                        builder: (_) => BusesScreen(compId: compID,)));
                   },
                   hoverColor: Colors.green,
                 ),
@@ -111,6 +241,36 @@ class Appdrawers extends StatelessWidget {
                   ),
                   leading: const Icon(
                     Icons.person,
+                    color: Colors.red,
+                  ),
+                  hoverColor: Colors.green,
+                  onTap: () {
+                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  title: CustomText(
+                    content: 'Inspector Locations',
+                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                  ),
+                  leading: const Icon(
+                    Icons.people,
+                    color: Colors.red,
+                  ),
+                  hoverColor: Colors.green,
+                  onTap: () {
+                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  title: CustomText(
+                    content: 'Alert',
+                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                  ),
+                  leading: const Icon(
+                    Icons.message,
                     color: Colors.red,
                   ),
                   hoverColor: Colors.green,

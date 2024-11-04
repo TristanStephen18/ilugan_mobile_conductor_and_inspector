@@ -44,7 +44,7 @@ class _BusViewerState extends State<BusViewer> {
       .listen((DocumentSnapshot snapshot) {
     if (snapshot.exists) {
       var data = snapshot.data() as Map<String, dynamic>;
-
+  
       // Check if 'current_location' is a GeoPoint
       GeoPoint geoPoint = data['current_location'] as GeoPoint;
       LatLng newLocation = LatLng(geoPoint.latitude, geoPoint.longitude);

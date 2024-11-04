@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,7 @@ class _ReservationsState extends State<Reservations> {
     retrieveUserData();
     print(busNum);
     print(companyId);
+    print(DateTime.now());
   }
 
   Future<void> retrieveUserData() async {
@@ -40,30 +43,31 @@ class _ReservationsState extends State<Reservations> {
     }
   }
 
- void openScanner() async {
-  const lineColor = '#ffffff';
-  const cancelButtonText = 'CANCEL';
-  const isShowFlashIcon = true;
-  const scanMode = ScanMode.DEFAULT;
+  void openScanner() async {
+    const lineColor = '#ffffff';
+    const cancelButtonText = 'CANCEL';
+    const isShowFlashIcon = true;
+    const scanMode = ScanMode.DEFAULT;
 
-  // Scan QR code
-  final qr = await FlutterBarcodeScanner.scanBarcode(
-      lineColor, cancelButtonText, isShowFlashIcon, scanMode)
-      .then((value) async {
-        if (value.isEmpty) {
-          StatusAlert.show(context,
+    // Scan QR code
+    final qr = await FlutterBarcodeScanner.scanBarcode(
+            lineColor, cancelButtonText, isShowFlashIcon, scanMode)
+        .then((value) async {
+      if (value.isEmpty) {
+        StatusAlert.show(context,
             duration: const Duration(seconds: 1),
             title: "Exited",
             subtitle: "No QR code scanned",
-            configuration: const IconConfiguration(icon: Icons.qr_code_scanner));
-        } else {
-          try {
-            showloader();
-            // Assuming value contains passengerId from the QR code
-            String passengerId = value;
+            configuration:
+                const IconConfiguration(icon: Icons.qr_code_scanner));
+      } else {
+        try {
+          showloader();
+          // Assuming value contains passengerId from the QR code
+          String passengerId = value;
 
-            // Query Firestore to find the reservation
-            var reservationQuery = await FirebaseFirestore.instance
+          // Query Firestore to find the reservation
+          var reservationQuery = await FirebaseFirestore.instance
               .collection('companies')
               .doc(companyId)
               .collection('buses')
@@ -71,70 +75,72 @@ class _ReservationsState extends State<Reservations> {
               .collection('reservations')
               .where('passengerId', isEqualTo: passengerId)
               .get();
-              print('sample');
-              print('ahsdkajd');
-            if (reservationQuery.docs.isNotEmpty) {
-              // Get the reservation document reference
-              var reservationDoc = reservationQuery.docs.first.reference;
+          print('Getting reservations');
+          print('Scanning passenger ID');
+          if (reservationQuery.docs.isNotEmpty) {
+            // Get the reservation document reference
+            var reservationDoc = reservationQuery.docs.first.reference;
 
-              // Update the 'accomplished' field to true
-              await reservationDoc.update({'accomplished': true}).then((value)async{
-                await FirebaseFirestore.instance
-                    .collection('passengers') // Specify the collection
-                    .doc(passengerId) // Specify the document ID
-                    .update({
-                  'hasreservation': false,
-                }).then((value) {
-                  Navigator.of(context).pop();
+            // Update the 'accomplished' field to true
+            await reservationDoc
+                .update({'accomplished': true}).then((value) async {
+              await FirebaseFirestore.instance
+                  .collection('passengers') // Specify the collection
+                  .doc(passengerId) // Specify the document ID
+                  .update({
+                'hasreservation': false,
+              }).then((value) {
+                Navigator.of(context).pop();
                 StatusAlert.show(context,
-                duration: const Duration(seconds: 1),
-                title: "Reservation Successful",
-                subtitle: "Passenger ID: $passengerId, Status: Accomplished",
-                configuration: const IconConfiguration(icon: Icons.check));
+                    duration: const Duration(seconds: 1),
+                    title: "Reservation Successful",
+                    subtitle:
+                        "Passenger ID: $passengerId, Status: Accomplished",
+                    configuration: const IconConfiguration(icon: Icons.check));
               });
             });
-            } else {
-              // No reservation found
-              Navigator.of(context).pop();
-              StatusAlert.show(context,
+          } else {
+            // No reservation found
+            Navigator.of(context).pop();
+            StatusAlert.show(context,
                 duration: const Duration(seconds: 1),
                 title: "Reservation Not Found",
                 subtitle: "No reservation for Passenger ID: $passengerId",
                 configuration: const IconConfiguration(icon: Icons.error));
-            }
-          } catch (error) {
-            // Handle error
-             Navigator.of(context).pop();
-            StatusAlert.show(context,
+          }
+        } catch (error) {
+          // Handle error
+          Navigator.of(context).pop();
+          StatusAlert.show(context,
               duration: const Duration(seconds: 1),
               title: "Error",
               subtitle: error.toString(),
               configuration: const IconConfiguration(icon: Icons.error));
-          }
         }
-      }).catchError((error) {
-        // Handle scanning error
-         Navigator.of(context).pop();
-        StatusAlert.show(context,
+      }
+    }).catchError((error) {
+      // Handle scanning error
+      Navigator.of(context).pop();
+      StatusAlert.show(context,
           duration: const Duration(seconds: 1),
           title: "Scanning Error",
           subtitle: error.toString(),
           configuration: const IconConfiguration(icon: Icons.error));
-      });
-}
-
-
-
-  void showloader(){
-    showDialog(context: context, 
-    builder: (context) {
-      return const AlertDialog(
-        title: Text('Processing Reservation'),
-        content: Image(image: AssetImage('assets/images/icons/loader2.gif'), height: 100, width: 100,),
-      );
     });
   }
 
+  void showloader() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return const AlertDialog(
+            title: Text('Processing Reservation'),
+            content: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,41 +182,112 @@ class _ReservationsState extends State<Reservations> {
   }
 }
 
-class ToAccomplish extends StatelessWidget {
+// String today = DateFormat.yMMMMd('en_US').format(DateTime.now());
+
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:flutter/material.dart';
+// import 'package:intl/intl.dart';
+
+class ToAccomplish extends StatefulWidget {
   final String companyId;
   final String busNum;
 
-  const ToAccomplish({required this.companyId, required this.busNum});
+  const ToAccomplish({required this.companyId, required this.busNum, super.key});
+
+  @override
+  State<ToAccomplish> createState() => _ToAccomplishState();
+}
+
+class _ToAccomplishState extends State<ToAccomplish> {
+  List<Map<String, dynamic>> toAccomplishList = [];
+  bool isLoading = true;
+  String errorMessage = "";
+
+  @override
+  void initState() {
+    super.initState();
+    sample(); // Use sample function to fetch data
+  }
+
+  void sample() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = "";
+    });
+
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('companies')
+          .doc(widget.companyId)
+          .collection('buses')
+          .doc(widget.busNum)
+          .collection('reservations')
+          .where('accomplished', isEqualTo: false)
+          .get();
+
+      List<Map<String, dynamic>> filteredReservations = [];
+      String today = DateFormat.yMMMMd('en_US').format(DateTime.now());
+
+      for (var doc in snapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        String reservationDate =
+            DateFormat.yMMMMd('en_US').format(data['date_time'].toDate());
+
+        if (reservationDate == today) {
+          filteredReservations.add({
+            ...data,
+            'id': doc.id, // Include document ID for display
+          });
+          print('Reservation for today: ${doc.id}');
+        } else {
+          print('Reservation not for today: ${doc.id}');
+        }
+      }
+
+      setState(() {
+        toAccomplishList = filteredReservations;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = "Failed to fetch data: $e";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('companies')
-          .doc(companyId)
-          .collection('buses')
-          .doc(busNum)
-          .collection('reservations')
-          .where('accomplished', isEqualTo: false)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("No pending reservations"));
-        }
-        return ListView(
-          children: snapshot.data!.docs.map((doc) {
-            return Card(
-              elevation: 10,
-              child: ListTile(
-                title: CustomText(content: 'Reservation #${doc.id}'),
-                subtitle: CustomText(content: 'Date: ${DateFormat('MM-dd-yyyy - hh:mm a').format(doc['date_time'].toDate())}'),
-                trailing: const Icon(Icons.pending)
-              ),
-            );
-          }).toList(),
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(child: Text(errorMessage));
+    }
+
+    if (toAccomplishList.isEmpty) {
+      return const Center(child: Text("No pending reservations for today"));
+    }
+
+    // Display the list of reservations
+    return ListView.builder(
+      itemCount: toAccomplishList.length,
+      itemBuilder: (context, index) {
+        final reservation = toAccomplishList[index];
+        final reservationDateTime =
+            (reservation['date_time'] as Timestamp).toDate();
+
+        return Card(
+          elevation: 10,
+          child: ListTile(
+            title: Text('Reservation #${reservation['id']}'),
+            subtitle: Text(
+              'Date: ${DateFormat('MM-dd-yyyy - hh:mm a').format(reservationDateTime)}\n'
+              'Amount: ${reservation['amount']} - From: ${reservation['from']} - To: ${reservation['to']}',
+            ),
+            trailing: const Icon(Icons.pending),
+          ),
         );
       },
     );
@@ -225,6 +302,10 @@ class Accomplished extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final todayStart = DateTime.now();
+    final todayEnd =
+        DateTime(todayStart.year, todayStart.month, todayStart.day, 23, 59, 59);
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('companies')
@@ -233,6 +314,8 @@ class Accomplished extends StatelessWidget {
           .doc(busNum)
           .collection('reservations')
           .where('accomplished', isEqualTo: true)
+          .where('date_time', isGreaterThanOrEqualTo: todayStart)
+          .where('date_time', isLessThanOrEqualTo: todayEnd)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -243,15 +326,14 @@ class Accomplished extends StatelessWidget {
         }
         return ListView(
           children: snapshot.data!.docs.map((doc) {
-
-            // DateTime datentime = doc['date_and_time'].toDate(); 
             return Card(
               elevation: 10,
               child: ListTile(
-                // tileColor: Colors.green,
                 title: CustomText(content: 'Reservation #${doc.id}'),
-                subtitle: CustomText(content: 'Date: ${doc['date_time'].toDate()}'),
-                trailing: const Icon(Icons.check)
+                subtitle: CustomText(
+                    content:
+                        'Date: ${DateFormat('MM-dd-yyyy - hh:mm a').format(doc['date_time'].toDate())}'),
+                trailing: const Icon(Icons.check),
               ),
             );
           }).toList(),

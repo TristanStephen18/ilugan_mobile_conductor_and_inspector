@@ -1,10 +1,10 @@
-// ignore_for_file: camel_case_types, deprecated_member_use, avoid_print
+// ignore_for_file: deprecated_member_use, avoid_print
 
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-// import 'package:gap/gap.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/auth.dart';
 import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/fetching.dart';
@@ -14,14 +14,12 @@ import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 
 class Dashboard_Con extends StatefulWidget {
   final String compId;
-  // ignore: non_constant_identifier_names
   final String? bus_num;
   final String? conID;
 
   const Dashboard_Con({
     super.key,
     required this.compId,
-    // ignore: non_constant_identifier_names
     required this.bus_num,
     required this.conID,
   });
@@ -35,7 +33,6 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   BitmapDescriptor assignedBusMarker = BitmapDescriptor.defaultMarker;
   String? companyId;
   String? busNum;
-  // String? id;
   Set<Marker> markers = {};
   late GoogleMapController mapController;
   final BusFunc helper = BusFunc();
@@ -43,7 +40,9 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   int occupied = 0;
   int reserved = 0;
   String terminal = "";
-  String destination="";
+  String destination = "";
+  StreamSubscription<DocumentSnapshot>? busDataSubscription;
+  StreamSubscription<QuerySnapshot>? busLocationSubscription;
 
   @override
   void initState() {
@@ -53,15 +52,16 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
 
   @override
   void dispose() {
+    // Cancel any active stream subscriptions to avoid setState after dispose
+    busDataSubscription?.cancel();
+    busLocationSubscription?.cancel();
     super.dispose();
   }
 
   Future<void> _initialize() async {
-    print(widget.bus_num);
     await _loadCustomMarkers();
     _listenToBusLocations();
     getuserdata();
-    // await Data().getcompanyname();
   }
 
   String email = "";
@@ -69,37 +69,41 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   String id = "";
   String budocID = "";
   String? comapnyname;
+  LatLng? currentloc;
 
-
-  void getuserdata() async {
+  Future<void> getuserdata() async {
     var data = await Data().getEmployeeData(widget.compId);
-    setState(() {
-      email = data?['email'];
-      name = data?['name'];
-      id = data?['id'];
-      busNum = data?['inbus'];
-      companyId = data?['companyid'];
-    });
+    if (mounted) {
+      setState(() {
+        email = data?['email'];
+        name = data?['name'];
+        id = data?['id'];
+        busNum = data?['inbus'];
+        companyId = data?['companyid'];
+      });
 
-    print(email + name + id + busNum.toString());
-    getBusRealtimeData(companyId.toString(), busNum.toString());
-    String? cname = await Data().getcompanyname(companyId.toString());
-    setState(() {
-      comapnyname = cname;
-    });
-    // setState(() {
-      
-    // });
+      getBusRealtimeData(companyId.toString(), busNum.toString());
+      String? cname = await Data().getcompanyname(companyId.toString());
+      if (mounted) {
+        setState(() {
+          comapnyname = cname;
+        });
+      }
+    }
   }
 
   void getBusRealtimeData(String companyid, String busnum) {
-    FirebaseFirestore.instance
-      .collection('companies')
-      .doc(companyid)
-      .collection('buses')
-      .doc(busnum).snapshots().listen((DocumentSnapshot snapshot){
-        if(snapshot.exists){
-          var data = snapshot.data() as Map<String, dynamic>;
+    // Store subscription and cancel it if widget is disposed
+    busDataSubscription = FirebaseFirestore.instance
+        .collection('companies')
+        .doc(companyid)
+        .collection('buses')
+        .doc(busnum)
+        .snapshots()
+        .listen((DocumentSnapshot snapshot) {
+      if (snapshot.exists) {
+        var data = snapshot.data() as Map<String, dynamic>;
+        if (mounted) {
           setState(() {
             available_seats = data['available_seats'];
             reserved = data['reserved_seats'];
@@ -107,31 +111,34 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
             terminal = data['terminalloc'];
             destination = data['destination'];
           });
-          print(data);
-        }else{  
-          print('Document does not exist');
         }
-      });
-}
+      } else {
+        print('Document does not exist');
+      }
+    });
+  }
 
   Future<void> _loadCustomMarkers() async {
     try {
       movingbusMarker = await BitmapDescriptor.fromAssetImage(
         const ImageConfiguration(devicePixelRatio: 2.2),
-        "assets/images/icons/moving_bus_icon.png",
+        "assets/images/icons/movingbus.bmp",
       );
       assignedBusMarker = await BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(devicePixelRatio: 2.2),
-        "assets/images/icons/moving_bus_icon.png",
+        const ImageConfiguration(devicePixelRatio: 4.5),
+        "assets/images/icons/mbus.bmp",
       );
-      setState(() {}); // Update the UI with loaded markers
+      if (mounted) {
+        setState(() {}); // Update the UI with loaded markers
+      }
     } catch (e) {
       print("Error loading custom icons: $e");
     }
   }
 
   void _listenToBusLocations() {
-    FirebaseFirestore.instance
+    // Store subscription and cancel it in dispose if widget is disposed
+    busLocationSubscription = FirebaseFirestore.instance
         .collection('companies')
         .doc(widget.compId)
         .collection('buses')
@@ -147,8 +154,8 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
         final plateNumber = data['plate_number'];
 
         if (doc.id == busNum) {
-          newMarkers
-              .add(_buildAssignedBusMarker(position, busNumber, plateNumber));
+          newMarkers.add(_buildAssignedBusMarker(position, busNumber, plateNumber));
+          currentloc = position;
           setToLocation(position);
         } else {
           final destination = LatLng(data['destination_coordinates'].latitude,
@@ -166,11 +173,13 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
         }
       }
 
-      setState(() {
-        markers
-          ..removeWhere((marker) => marker.markerId.value.startsWith('bus_'))
-          ..addAll(newMarkers);
-      });
+      if (mounted) {
+        setState(() {
+          markers
+            ..removeWhere((marker) => marker.markerId.value.startsWith('bus_'))
+            ..addAll(newMarkers);
+        });
+      }
     });
   }
 
@@ -224,14 +233,12 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   }
 
   void setToLocation(LatLng position) {
-    CameraPosition cameraPosition =
-        CameraPosition(target: position, zoom: 15);
+    CameraPosition cameraPosition = CameraPosition(target: position, zoom: 18);
     mapController.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
-    setState(() {});
   }
 
   Future<void> logout() async {
-     await Auth().onLogout(widget.compId, busNum.toString(),
+    await Auth().onLogout(widget.compId, busNum.toString(),
         FirebaseAuth.instance.currentUser!.uid);
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
@@ -252,7 +259,13 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        drawer: Appdrawers(logoutfunc: logout, conid: id, coname: name, busnum: busNum.toString(), compID: widget.compId,),
+        drawer: Appdrawers(
+          logoutfunc: logout,
+          conid: id,
+          coname: name,
+          busnum: busNum.toString(),
+          compID: widget.compId,
+        ),
         appBar: AppBar(
           centerTitle: true,
           toolbarHeight: 60,
@@ -262,15 +275,9 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
             fontcolor: Colors.yellowAccent,
             fontweight: FontWeight.w500,
           ),
-          iconTheme: const IconThemeData(
-            color: Colors.white
-          ),
-          actions: const [
-            Image(
-              image: AssetImage("assets/images/logo.png"),
-              height: 50,
-              width: 50,
-            ),
+          iconTheme: const IconThemeData(color: Colors.yellow),
+          actions: [
+            IconButton(onPressed: (){}, icon: const Icon(Icons.notifications))
           ],
           backgroundColor: Colors.redAccent,
         ),
@@ -285,10 +292,9 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
               onMapCreated: (controller) => mapController = controller,
               markers: markers,
             ),
-            // Positioned Floating Containers
             Positioned(
-              bottom: 20, // Distance from the bottom of the screen
-              left: 10, // Distance from the left of the screen
+              bottom: 20,
+              left: 10,
               child: Container(
                 padding: const EdgeInsets.all(10),
                 width: MediaQuery.sizeOf(context).width - 20,
@@ -303,146 +309,151 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                     ),
                   ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CustomText(content: 'Route', fontweight: FontWeight.bold,),
-                          const Gap(3),
-                          const Icon(Icons.location_on)
-                        ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CustomText(content: 'Route', fontweight: FontWeight.bold),
+                        const Gap(3),
+                        const Icon(Icons.location_on)
+                      ],
+                    ),
+                    Text(
+                      '$terminal ------------------------------------- > $destination',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(
-                        '$terminal ------------------------------------- > $destination',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        CustomText(content: 'Seats', fontweight: FontWeight.bold),
+                        const Gap(3),
+                        const Icon(Icons.chair)
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Spacer(),
+                        Column(
+                          children: [
+                            CustomText(content: 'Available'),
+                            Container(
+                              width: 70,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  available_seats.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          CustomText(content: 'Seats', fontweight: FontWeight.bold,),
-                           const Gap(3),
-                          const Icon(Icons.chair)
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Three grey boxes
-                          Column(
-                            children: [
-                              CustomText(content: 'Available'),
-                              Container(
-                                width: 70,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    available_seats.toString(),
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                    ),
+                        const Spacer(),
+                        Column(
+                          children: [
+                            CustomText(content: 'Reserved'),
+                            Container(
+                              width: 70,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  reserved.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              CustomText(content: 'Reserved'),
-                              Container(
-                                width: 70,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    reserved.toString(),
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                    ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Column(
+                          children: [
+                            CustomText(content: 'Occupied'),
+                            Container(
+                              width: 70,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  occupied.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              CustomText(content: 'Occupied'),
-                              Container(
-                                width: 70,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    occupied.toString(),
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      // Center(
-                      //   child: ,
-                      // )
-                    ],
-                  ),
+                            ),
+                          ],
+                        ),
+                        const Spacer()
+                      ],
+                    ),
+                    const Gap(10)
+                  ],
                 ),
               ),
             ),
             Positioned(
               top: 20,
               right: 10,
-              child: Container(
-                width: 100,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 5,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Image.asset(
-                      "assets/images/icons/choose.png",
-                      height: 70,
-                      width: 70,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      busNum.toString(), 
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+              child: GestureDetector(
+                onTap: () {
+                  if (currentloc != null) {
+                    setToLocation(currentloc!);
+                  }
+                },
+                child: Container(
+                  width: 130,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 5,
+                        spreadRadius: 2,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        "assets/images/icons/choose.png",
+                        height: 70,
+                        width: 70,
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        busNum.toString(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )

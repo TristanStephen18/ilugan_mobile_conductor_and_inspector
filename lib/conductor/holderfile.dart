@@ -1,17 +1,20 @@
-// ignore_for_file: must_be_immutable
+// ignore_for_file: must_be_immutable, use_build_context_synchronously
 
 // import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/helpers.dart';
 // import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 // import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/notifications.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/reservations.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/scannerscreen.dart';
+// import 'package:iluganmobile_conductors_and_inspector/conductor/scannerscreen.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/scannerscreen.dart';
 // import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
+import 'package:status_alert/status_alert.dart';
 // import 'package:status_alert/status_alert.dart';
 // import 'package:status_alert/status_alert.dart';
 
@@ -35,22 +38,101 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
   void initState() {
     super.initState();
     print(widget.companyId + " " + widget.busnum);
+    print(DateTime.now());
   }
 
   void openScanner() async {
-    final lineColor = '#ffffff';
-    final cancelButtonText = 'CANCEL';
-    final isShowFlashIcon = true;
-    final scanMode = ScanMode.DEFAULT;
+    const lineColor = '#ffffff';
+    const cancelButtonText = 'CANCEL';
+    const isShowFlashIcon = true;
+    const scanMode = ScanMode.DEFAULT;
+
+    // Scan QR code
     final qr = await FlutterBarcodeScanner.scanBarcode(
-        lineColor, cancelButtonText, isShowFlashIcon, scanMode).then((value) {
-          // setState(() {
-          //   output = value;
-          // });
-          // ignore: avoid_print
-          print(value);
-        },
-        );
+            lineColor, cancelButtonText, isShowFlashIcon, scanMode)
+        .then((value) async {
+      if (value.isEmpty) {
+        StatusAlert.show(context,
+            duration: const Duration(seconds: 1),
+            title: "Exited",
+            subtitle: "No QR code scanned",
+            configuration:
+                const IconConfiguration(icon: Icons.qr_code_scanner));
+      } else {
+        try {
+          String resnum = value;
+          var reservationQuery = FirebaseFirestore.instance
+              .collection('companies')
+              .doc(widget.companyId)
+              .collection('buses')
+              .doc(widget.busnum)
+              .collection('reservations')
+              .doc(resnum);
+
+          reservationQuery.update({'accomplished': true}).then((value) async {
+            print("Reservation Accomplished");
+            DocumentSnapshot<Map<String, dynamic>> snapshot =
+                await reservationQuery.get();
+            if (snapshot.exists) {
+              var data = snapshot.data() as Map<String, dynamic>;
+              FirebaseFirestore.instance
+                  .collection('passengers')
+                  .doc(data['passengerId'])
+                  .update({'hasreservation': false,}).then((value) {
+                print("${data['passengerId']} now has no current reservations");
+                Conductor().onsuccessfulscanned(data['passengerId']);
+              });
+            }
+          });
+          //   print('Getting reservations');
+          //   print('Reservation');
+          // if (reservationQuery.exists) {
+          //   // Get the reservation document reference
+          //   var reservationData = reservationQuery.data() as Map<String, dynamic>;
+
+          // //   await reservationDoc.update({'accomplished': true}).then((value)async{
+          // //     await FirebaseFirestore.instance
+          // //         .collection('passengers') // Specify the collection
+          // //         .doc(passengerId) // Specify the document ID
+          // //         .update({
+          // //       'hasreservation': false,
+          // //     }).then((value) {
+          // //       Navigator.of(context).pop();
+          // //     StatusAlert.show(context,
+          // //     duration: const Duration(seconds: 1),
+          // //     title: "Reservation Successful",
+          // //     subtitle: "Passenger ID: $passengerId, Status: Accomplished",
+          // //     configuration: const IconConfiguration(icon: Icons.check));
+          // //   });
+          // // });
+          // } else {
+          //   // No reservation found
+          //   Navigator.of(context).pop();
+          //   StatusAlert.show(context,
+          //     duration: const Duration(seconds: 1),
+          //     title: "Reservation Not Found",
+          //     subtitle: "No reservation for Passenger ID: $passengerId",
+          //     configuration: const IconConfiguration(icon: Icons.error));
+          // }
+        } catch (error) {
+          // Handle error
+          Navigator.of(context).pop();
+          StatusAlert.show(context,
+              duration: const Duration(seconds: 1),
+              title: "Error",
+              subtitle: error.toString(),
+              configuration: const IconConfiguration(icon: Icons.error));
+        }
+      }
+    }).catchError((error) {
+      // Handle scanning error
+      Navigator.of(context).pop();
+      StatusAlert.show(context,
+          duration: const Duration(seconds: 1),
+          title: "Scanning Error",
+          subtitle: error.toString(),
+          configuration: const IconConfiguration(icon: Icons.error));
+    });
   }
 
   // void logout() async {
@@ -99,7 +181,10 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
         selectedIndex: currentpageindex,
         destinations: const <Widget>[
           NavigationDestination(
-            selectedIcon: Icon(Icons.pending, size: 40,),
+            selectedIcon: Icon(
+              Icons.pending,
+              size: 40,
+            ),
             icon: Icon(Icons.pending),
             label: 'Pending',
           ),
@@ -109,7 +194,10 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
           // ),
           NavigationDestination(
             icon: Badge(
-              child: Icon(Icons.done, size: 40,),
+              child: Icon(
+                Icons.done,
+                size: 40,
+              ),
             ),
             label: 'Accomplished',
           ),
@@ -126,7 +214,11 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
         child: FloatingActionButton(
           onPressed: openScanner,
           tooltip: "Scan Passengers Ticket",
-          child: const Icon(Icons.qr_code_scanner, size: 80, color: Colors.redAccent,),
+          child: const Icon(
+            Icons.qr_code_scanner,
+            size: 80,
+            color: Colors.redAccent,
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

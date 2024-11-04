@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:iluganmobile_conductors_and_inspector/AuthService.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/holderfile.dart';
+// import 'package:iluganmobile_conductors_and_inspector/conductor/holderfile.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/homescreen_ins.dart';
 import 'package:iluganmobile_conductors_and_inspector/main.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/landingscreen.dart';
-import 'package:iluganmobile_conductors_and_inspector/screens/loadingscreen.dart';
+// import 'package:iluganmobile_conductors_and_inspector/screens/loadingscreen.dart';
 
 class HomeScreenSelector extends StatelessWidget {
   @override

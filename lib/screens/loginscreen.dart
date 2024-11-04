@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, non_constant_identifier_names
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/choosebus.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/helpers.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/homescreen_ins.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 import 'package:quickalert/models/quickalert_type.dart';
@@ -29,11 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
   var emailcon = TextEditingController();
   var passcon = TextEditingController();
 
-  var commpId = null;
-  var name = null;
-  String user_email = "";
-  var type = null;
-  var conId = null;
+  String? commpId;
+  String? name;
+  String? user_email;
+  String? type;
+  String? conId;
 
   Future<bool> searchUsers(email, password) async {
     try {
@@ -69,8 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
         title: "Signing you in",
       );
       await searchUsers(emailcon.text, passcon.text);
+      // Conductor().changedstatus('active', commpId.toString());
 
-      if(user_email.isEmpty){
+      if(user_email == null){
         Navigator.of(context).pop();
         QuickAlert.show(
           context: context,
@@ -85,9 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
           .then((UserCredential cred) async {
         Navigator.of(context).pop();
         if(type == 'conductor'){
-          Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>ChooseBusScreen(compId: commpId, conductorId: cred.user!.uid, conname: name,)));
+          Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>ChooseBusScreen(compId: commpId as String, conductorId: cred.user!.uid, conname: name as String,)));
         }else{
-          Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>Dashboard_Ins(compId: commpId,)));
+          Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>Dashboard_Ins(compId: commpId as String,)));
         }
       }).catchError((error) {
         Navigator.of(context).pop();

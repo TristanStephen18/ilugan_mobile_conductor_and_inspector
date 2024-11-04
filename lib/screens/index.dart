@@ -10,7 +10,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSplashScreen(
-      backgroundColor: const Color.fromARGB(255, 226, 46, 46),
+      backgroundColor:Colors.greenAccent,
       splash:  const Center(
         child: Image(
                     image: AssetImage(

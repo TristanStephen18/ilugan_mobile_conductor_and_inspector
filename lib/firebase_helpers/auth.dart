@@ -7,10 +7,19 @@ class Auth {
       'conductor': ""
     });
     await FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({
-      'inbus': ""
+      'inbus': "", 
+      "status" : "inactive"
     });
 
     print('Data updated');
+  }
+
+  void onBusChosen(String compID, String empID) {
+    FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
+      "status" : "active"
+    });
+
+    print('Is active');
   }
 
 }
