@@ -26,6 +26,7 @@ class HomeScreenSelector extends StatelessWidget {
             // return ConductorScreens(companyId: companyId, busnum: "", conId: FirebaseAuth.instance.currentUser!.uid,);
             return Dashboard_Con(compId: companyId, bus_num: "", conID: FirebaseAuth.instance.currentUser!.uid,);
           } else if (userType == 'inspector') {
+            
             return Dashboard_Ins(compId: companyId);
           } else {
             return const LandingScreen();  // Fallback for unknown user types

@@ -1,15 +1,17 @@
-// ignore_for_file: must_be_immutable, use_build_context_synchronously
+// ignore_for_file: must_be_immutable, use_build_context_synchronously, avoid_print
 
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/accomplished.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/helpers.dart';
 // import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 // import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/notifications.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/reservations.dart';
+// import 'package:iluganmobile_conductors_and_inspector/conductor/reservations.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/toaccomplish.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/scannerscreen.dart';
 // import 'package:iluganmobile_conductors_and_inspector/conductor/scannerscreen.dart';
 // import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
@@ -69,7 +71,21 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
               .collection('reservations')
               .doc(resnum);
 
-          reservationQuery.update({'accomplished': true}).then((value) async {
+          DocumentSnapshot snapshot = await reservationQuery.get();
+          print(snapshot);
+          if(snapshot.exists){
+            print("Data exists");
+            var data = snapshot.data() as Map<String, dynamic>;
+            print(data['accomplished']);
+            if(data['accomplished'] == true){
+               StatusAlert.show(context,
+                    duration: const Duration(seconds: 1),
+                    title: "Reservation Error",
+                    subtitle: "Reservation has already been accomplished",
+                    configuration:
+                        const IconConfiguration(icon: Icons.warning_amber));
+            }else{
+              reservationQuery.update({'accomplished': true}).then((value) async {
             print("Reservation Accomplished");
             DocumentSnapshot<Map<String, dynamic>> snapshot =
                 await reservationQuery.get();
@@ -78,12 +94,26 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
               FirebaseFirestore.instance
                   .collection('passengers')
                   .doc(data['passengerId'])
-                  .update({'hasreservation': false,}).then((value) {
+                  .update({
+                'hasreservation': false,
+                'currentlyonbus': true
+              }).then((value) {
                 print("${data['passengerId']} now has no current reservations");
                 Conductor().onsuccessfulscanned(data['passengerId']);
+                StatusAlert.show(context,
+                    duration: const Duration(seconds: 1),
+                    title: "Scanning Successful",
+                    subtitle: "Reservation has been accomplished",
+                    configuration:
+                        const IconConfiguration(icon: Icons.check));
               });
             }
           });
+            }
+          }else{
+            print("data does not exists");
+          }
+
           //   print('Getting reservations');
           //   print('Reservation');
           // if (reservationQuery.exists) {
@@ -153,8 +183,12 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
         title: CustomText(
           content: 'Reservations',
           fsize: 20,
-          fontcolor: Colors.yellowAccent,
+          fontcolor: Colors.white,
           fontweight: FontWeight.w500,
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
         actions: const [
           Image(
@@ -163,7 +197,7 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
             width: 50,
           ),
         ],
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.green,
         // drawer: Appdrawers(
         //   logoutfunc: logout,
         // ),
@@ -177,7 +211,7 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
             currentpageindex = index;
           });
         },
-        indicatorColor: Colors.redAccent,
+        indicatorColor: Colors.greenAccent,
         selectedIndex: currentpageindex,
         destinations: const <Widget>[
           NavigationDestination(
@@ -217,7 +251,7 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
           child: const Icon(
             Icons.qr_code_scanner,
             size: 80,
-            color: Colors.redAccent,
+            color: Colors.green,
           ),
         ),
       ),

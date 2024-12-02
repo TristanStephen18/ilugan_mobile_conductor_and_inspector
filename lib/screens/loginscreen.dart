@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/choosebus.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/helpers.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
+import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/auth.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/homescreen_ins.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 import 'package:quickalert/models/quickalert_type.dart';
@@ -35,6 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String? user_email;
   String? type;
   String? conId;
+  String? status;
+  String? inbus;
 
   Future<bool> searchUsers(email, password) async {
     try {
@@ -52,6 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
           name = data['employee_name'];
           type = data['type'];
           conId = data['id'];
+          status = data['status'];
+          inbus = data['inbus'];
           break;
         }
       }
@@ -80,6 +86,14 @@ class _LoginScreenState extends State<LoginScreen> {
           text: "There is no such email",
           title: "Oops",
         );
+      }else if(user_email != null&& status == 'disabled'){
+        Navigator.of(context).pop();
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          text: "This account has been disabled",
+          title: "Account Info",
+        );
       }else{
         await FirebaseAuth.instance
           .signInWithEmailAndPassword(
@@ -87,8 +101,10 @@ class _LoginScreenState extends State<LoginScreen> {
           .then((UserCredential cred) async {
         Navigator.of(context).pop();
         if(type == 'conductor'){
-          Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>ChooseBusScreen(compId: commpId as String, conductorId: cred.user!.uid, conname: name as String,)));
+          Navigator.of(context).push(MaterialPageRoute(builder: (_)=>Dashboard_Con(compId: commpId.toString(), bus_num: inbus, conID: conId)));
+          // Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>ChooseBusScreen(compId: commpId as String, conductorId: cred.user!.uid, conname: name as String,)));
         }else{
+          await Auth().oninspectorlogin(commpId as String, FirebaseAuth.instance.currentUser!.uid);
           Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>Dashboard_Ins(compId: commpId as String,)));
         }
       }).catchError((error) {
@@ -114,11 +130,11 @@ class _LoginScreenState extends State<LoginScreen> {
         centerTitle: true,
         toolbarHeight: 60,
         title: CustomText(content: 'ILugan', fsize: 
-        30, fontcolor: Colors.yellowAccent, fontweight: FontWeight.w500,),
+        30, fontcolor: Colors.white, fontweight: FontWeight.w500,),
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios,
-            color: Colors.yellow,
+            color: Colors.white,
           ),
           onPressed: () {
             Navigator.pop(context);
@@ -132,47 +148,49 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Gap(10)
         ],
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        // child: SingleChildScrollView(
-          child: Form(
-            key: formkey, 
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Gap(10),
-                CustomText(
-                  content: "Log In",
-                  fsize: 30,
-                  fontcolor: Colors.black,
-                  fontweight: FontWeight.bold,
-                ),
-                const Gap(10),
-                CustomText(
-                  content: "Kindly Log in your company issued account.",
-                  fsize: 20,
-                  fontcolor: Colors.black,
-                  fontweight: FontWeight.bold,
-                ),
-                const Gap(40),
-                CustomText(content: "Email", fontcolor: Colors.black,),
-                const Gap(5),
-                LoginTfields(field_controller: emailcon, label: "e.g employee@email.com", suffixicon: Icons.email,),
-                const Gap(20),
-                CustomText(content: "Password", fontcolor: Colors.black,),
-                const Gap(5),
-                LoginPassTfields(field_controller: passcon, showpassIcon: Icons.visibility, hidepassIcon: Icons.visibility_off, showpass: true),
-                const Spacer(),
-                Center(
-                  child: Ebuttons(func: checklogin, label: "Log In", bcolor: Colors.redAccent, fcolor: Colors.white, width: MediaQuery.sizeOf(context).width/1.3, height: 70, tsize: 25,)
-                ),
-                const Spacer(),
-              ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          // child: SingleChildScrollView(
+            child: Form(
+              key: formkey, 
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Gap(10),
+                  CustomText(
+                    content: "Log In",
+                    fsize: 30,
+                    fontcolor: Colors.black,
+                    fontweight: FontWeight.bold,
+                  ),
+                  const Gap(10),
+                  CustomText(
+                    content: "Kindly Log in your company issued account.",
+                    fsize: 16,
+                    fontcolor: Colors.black,
+                    
+                  ),
+                  const Gap(100),
+                  CustomText(content: "Email", fontcolor: Colors.black,),
+                  const Gap(5),
+                  LoginTfields(field_controller: emailcon, label: "e.g employee@email.com", suffixicon: Icons.email,),
+                  const Gap(20),
+                  CustomText(content: "Password", fontcolor: Colors.black,),
+                  const Gap(5),
+                  LoginPassTfields(field_controller: passcon, showpassIcon: Icons.visibility, hidepassIcon: Icons.visibility_off, showpass: true),
+                  const SizedBox(height: 200),
+                  Center(
+                    child: Ebuttons(func: checklogin, label: "Log In", bcolor: Colors.green, fcolor: Colors.white, width: MediaQuery.sizeOf(context).width/1.3, height: 70, tsize: 25,)
+                  ),
+                  const Gap(70),
+                ],
+              ),
             ),
-          ),
-        // ),
+          // ),
+        ),
       ),
     );
   }

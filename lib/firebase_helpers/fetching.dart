@@ -58,6 +58,21 @@ Future<String?> getcompanyname(String id)async {
         print('error fetching comapny name');
       }
 }
+
+Future<String?> getEmpId(String companyId) async {
+  DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection('companies').doc(companyId).collection('employees').doc(FirebaseAuth.instance.currentUser!.uid).get();
+
+
+  if(snapshot.exists){
+    var data = snapshot.data() as Map<String, dynamic>;
+
+      print('Getting employee id'); 
+
+    return data['id'];
+  }
+
+  return null;
+}
 }
 
 

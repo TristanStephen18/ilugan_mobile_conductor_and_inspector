@@ -6,11 +6,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/notificationism.dart';
 import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/auth.dart';
 import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/fetching.dart';
 import 'package:iluganmobile_conductors_and_inspector/helpers/busfunctions.dart';
+import 'package:iluganmobile_conductors_and_inspector/responsemonitoring/companyresponse.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 
 class Dashboard_Con extends StatefulWidget {
   final String compId;
@@ -36,11 +41,11 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
   Set<Marker> markers = {};
   late GoogleMapController mapController;
   final BusFunc helper = BusFunc();
-  int available_seats = 0;
-  int occupied = 0;
-  int reserved = 0;
-  String terminal = "";
-  String destination = "";
+  int? available_seats;
+  int? occupied;
+  int? reserved;
+  String? terminal;
+  String? destination;
   StreamSubscription<DocumentSnapshot>? busDataSubscription;
   StreamSubscription<QuerySnapshot>? busLocationSubscription;
 
@@ -82,6 +87,8 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
         companyId = data?['companyid'];
       });
 
+      Responsemonitoring().listentocompanyresponse(companyId.toString(), busNum.toString());
+
       getBusRealtimeData(companyId.toString(), busNum.toString());
       String? cname = await Data().getcompanyname(companyId.toString());
       if (mounted) {
@@ -111,6 +118,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
             terminal = data['terminalloc'];
             destination = data['destination'];
           });
+          print(destination);
         }
       } else {
         print('Document does not exist');
@@ -237,9 +245,37 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
     mapController.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
   }
 
-  Future<void> logout() async {
+Future<void> logout() async {
+    QuickAlert.show(
+      context: context,
+      type: QuickAlertType.confirm,
+      title: 'Logout Confirmation',
+      text: 'Do you want to log out and exit your bus?',
+      confirmBtnText: 'Yes',
+      cancelBtnText: 'Just log out',
+      onConfirmBtnTap: () async {
+        print("both");
+        await _logoutAndExit();
+        // Navigator.of(context).pop(); // Dismiss the alert
+      },
+      onCancelBtnTap: () async {
+        print("One");
+        await _logoutOnly();
+        // Navigator.of(context).pop(); // Dismiss the alert
+      },
+    );
+  }
+
+  Future<void> _logoutAndExit() async {
     await Auth().onLogout(widget.compId, busNum.toString(),
         FirebaseAuth.instance.currentUser!.uid);
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()));
+  }
+
+  Future<void> _logoutOnly() async {
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -272,14 +308,16 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
           title: CustomText(
             content: comapnyname != null ? comapnyname.toString() : 'Loading...',
             fsize: 20,
-            fontcolor: Colors.yellowAccent,
+            fontcolor: Colors.white,
             fontweight: FontWeight.w500,
           ),
-          iconTheme: const IconThemeData(color: Colors.yellow),
+          iconTheme: const IconThemeData(color: Colors.white),
           actions: [
-            IconButton(onPressed: (){}, icon: const Icon(Icons.notifications))
+            IconButton(onPressed: (){
+              Navigator.of(context).push(MaterialPageRoute(builder: (_)=>NotificationsScreen(compid: widget.compId, busnum: busNum.toString())));
+            }, icon: const Icon(Icons.notifications))
           ],
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Colors.green,
         ),
         body: Stack(
           children: [
@@ -314,7 +352,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                   children: [
                     Row(
                       children: [
-                        CustomText(content: 'Route', fontweight: FontWeight.bold),
+                        CustomText(content: 'Route', fontweight: FontWeight.bold, fsize: 20,),
                         const Gap(3),
                         const Icon(Icons.location_on)
                       ],
@@ -329,7 +367,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        CustomText(content: 'Seats', fontweight: FontWeight.bold),
+                        CustomText(content: 'Seats', fontweight: FontWeight.bold, fsize: 20,),
                         const Gap(3),
                         const Icon(Icons.chair)
                       ],
@@ -345,7 +383,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                               width: 70,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Colors.grey,
+                                color: Colors.green,
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               child: Center(
@@ -368,7 +406,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                               width: 70,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Colors.grey,
+                                color: const Color.fromARGB(255, 55, 126, 91),
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               child: Center(
@@ -391,7 +429,7 @@ class _Dashboard_ConState extends State<Dashboard_Con> {
                               width: 70,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Colors.grey,
+                                color: Colors.black,
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               child: Center(

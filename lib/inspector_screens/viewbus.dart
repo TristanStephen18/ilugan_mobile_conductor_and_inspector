@@ -21,12 +21,32 @@ class _BusViewerState extends State<BusViewer> {
     print(widget.compId);
     print(widget.busnum);
     _getBusinfo();
+    _loadCustomMarkers();
   }
 
   LatLng? current_location;
   String? conductor;
   Set<Marker> markers = {};
   late GoogleMapController mapController;
+  String? address;
+
+  BitmapDescriptor? markericon;
+
+
+Future<void> _loadCustomMarkers() async {
+    try {
+      markericon = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(devicePixelRatio: 4.5),
+        "assets/images/icons/mbus.bmp",
+      );
+      if (mounted) {
+        setState(() {}); // Update the UI with loaded markers
+      }
+    } catch (e) {
+      print("Error loading custom icons: $e");
+    }
+  }
+
 
   void setToLocation(LatLng position) {
     CameraPosition cameraPosition = CameraPosition(target: position, zoom: 15);
@@ -55,6 +75,7 @@ class _BusViewerState extends State<BusViewer> {
         markerId: MarkerId('busloc'),
         position: newLocation,
         infoWindow: InfoWindow(title: "Bus Location"),
+        icon: markericon as BitmapDescriptor
       ));
 
       setToLocation(newLocation);
@@ -72,9 +93,15 @@ class _BusViewerState extends State<BusViewer> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.green,
         centerTitle: true,
-        title: const Text("Buses", style: TextStyle(color: Colors.white)),
+        title:  Text(widget.busnum, style: TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         actions: const [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),

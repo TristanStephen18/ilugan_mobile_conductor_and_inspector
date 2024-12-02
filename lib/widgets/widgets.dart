@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/alerting.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/conductorprofile.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/busviewer.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/holderfile.dart';
+import 'package:iluganmobile_conductors_and_inspector/inspector_screens/profile.dart';
 
 class Appdrawers extends StatelessWidget {
   Appdrawers(
@@ -37,7 +39,7 @@ class Appdrawers extends StatelessWidget {
               children: [
                 DrawerHeader(
                     decoration: const BoxDecoration(
-                      color: Colors.redAccent,
+                      color: Colors.green,
                     ),
                     child: Column(
                       children: [
@@ -58,13 +60,14 @@ class Appdrawers extends StatelessWidget {
                                     CustomText(
                                       content: coname.toUpperCase(),
                                       fontcolor: Colors.white,
-                                      fsize: 20,
+                                      fsize: 14,
                                       fontweight: FontWeight.bold,
                                     ),
                                     CustomText(
                                       content: conid.toUpperCase(),
                                       fontcolor: Colors.white,
                                       fontweight: FontWeight.w600,
+                                      fsize: 10,
                                     )
                                   ],
                                 )
@@ -81,9 +84,10 @@ class Appdrawers extends StatelessWidget {
                   ),
                   leading: const Icon(
                     Icons.list,
-                    color: Colors.red,
+                    color: Colors.green,
                   ),
-                  hoverColor: Colors.red,
+                  hoverColor: Colors.
+                  green,
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (_)=> ReservationsScreen(busnum: busnum, companyId: compID, conId: conid,)));
                   },
@@ -96,37 +100,22 @@ class Appdrawers extends StatelessWidget {
                   ),
                   leading: const Icon(
                     Icons.person,
-                    color: Colors.red,
+                    color: Colors.green,
                   ),
                   hoverColor: Colors.green,
                   onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=> ProfileCon(companyId: compID,)));
                   },
                 ),
                 const Divider(),
                 ListTile(
                   title: CustomText(
-                    content: 'Inspector Locations',
-                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
-                  ),
-                  leading: const Icon(
-                    Icons.people,
-                    color: Colors.red,
-                  ),
-                  hoverColor: Colors.green,
-                  onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  title: CustomText(
-                    content: 'Alert',
+                    content: 'Alert Company',
                     fontcolor: const Color.fromARGB(255, 104, 103, 103),
                   ),
                   leading: const Icon(
                     Icons.message,
-                    color: Colors.red,
+                    color: Colors.green,
                   ),
                   hoverColor: Colors.green,
                   onTap: () {
@@ -180,7 +169,7 @@ class InsAppdrawers extends StatelessWidget {
               children: [
                 DrawerHeader(
                     decoration: const BoxDecoration(
-                      color: Colors.redAccent,
+                      color: Colors.green,
                     ),
                     child: Column(
                       children: [
@@ -221,11 +210,11 @@ class InsAppdrawers extends StatelessWidget {
                 ListTile(
                   title: CustomText(
                     content: 'Buses',
-                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                    fontcolor: Colors.green,
                   ),
                   leading: const Icon(
                     Icons.bus_alert,
-                    color: Colors.red,
+                    color: Colors.green,
                   ),
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
@@ -237,47 +226,32 @@ class InsAppdrawers extends StatelessWidget {
                 ListTile(
                   title: CustomText(
                     content: 'Profile',
-                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                    fontcolor: Colors.green,
                   ),
                   leading: const Icon(
                     Icons.person,
-                    color: Colors.red,
+                    color: Colors.green,
                   ),
                   hoverColor: Colors.green,
                   onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=> ProfileIns(companyId: compID,)));
                   },
                 ),
-                const Divider(),
-                ListTile(
-                  title: CustomText(
-                    content: 'Inspector Locations',
-                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
-                  ),
-                  leading: const Icon(
-                    Icons.people,
-                    color: Colors.red,
-                  ),
-                  hoverColor: Colors.green,
-                  onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  title: CustomText(
-                    content: 'Alert',
-                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
-                  ),
-                  leading: const Icon(
-                    Icons.message,
-                    color: Colors.red,
-                  ),
-                  hoverColor: Colors.green,
-                  onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
-                  },
-                ),
+                // const Divider(),
+                // ListTile(
+                //   title: CustomText(
+                //     content: 'Contact Company',
+                //     fontcolor: Colors.green,
+                //   ),
+                //   leading: const Icon(
+                //     Icons.message,
+                //     color: Colors.green,
+                //   ),
+                //   hoverColor: Colors.green,
+                //   onTap: () {
+                //     // Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const TransactionHistoryScreen()));
+                //   },
+                // ),
               ],
             ),
           ),
@@ -632,6 +606,67 @@ class _LoginPassTfieldsState extends State<LoginPassTfields> {
             ),
           ),
           errorStyle: const TextStyle(color: Colors.black)),
+    );
+  }
+}
+
+class ProfileTfields extends StatefulWidget {
+  ProfileTfields(
+      {super.key,
+      // required this.field_controller,
+      this.suffixicon,
+      this.label,
+      this.prefix,
+      this.data,
+      this.isreadable});
+
+  // var field_controller = TextEditingController();
+  IconData? suffixicon;
+  String? label = "";
+  Widget? prefix;
+  String? data;
+  bool? isreadable;
+
+  @override
+  State<ProfileTfields> createState() => _ProfileTfieldsState();
+}
+
+class _ProfileTfieldsState extends State<ProfileTfields> {
+  bool togglereadonly = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      textAlign: TextAlign.center,
+      readOnly: togglereadonly,
+      style: const TextStyle(color: Color.fromRGBO(0, 0, 0, 1)),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please fill up this field';
+        }
+        return null;
+      },
+      initialValue: widget.data,
+      decoration: InputDecoration(
+          prefix: widget.prefix,
+          fillColor: Colors.transparent,
+          filled: true,
+          suffixIcon: IconButton(
+            onPressed: () {
+              setState(() {
+                togglereadonly = !togglereadonly;
+              });
+            },
+            icon: Icon(
+              widget.suffixicon,
+              color: Colors.black,
+            ),
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(40)),
+          label: CustomText(
+            content: '${widget.label}',
+            fontcolor: Colors.black,
+          )),
     );
   }
 }

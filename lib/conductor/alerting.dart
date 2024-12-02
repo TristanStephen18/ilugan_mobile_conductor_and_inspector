@@ -26,9 +26,18 @@ class _CategoryScreenState extends State<CategoryScreen> {
         toolbarHeight: 50,
         title: CustomText(
           content: 'Emergency Alert',
-          fsize: 17,
-          fontcolor: Colors.yellowAccent,
+          fsize: 20,
+          fontcolor: Colors.white,
           fontweight: FontWeight.w500,
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         actions: const [
           Image(
@@ -37,7 +46,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
             width: 50,
           ),
         ],
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.green,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -106,7 +115,8 @@ class _CategoryCardState extends State<CategoryCard> {
           .set({
         "emergency": widget.label,
         "busnumber": widget.busnum,
-        "description": _controller.text
+        "description": _controller.text,
+        "date": DateTime.now()
       }).then((value){
         QuickAlert.show(context: context, type: QuickAlertType.info, title: "Alert Sent");
       });
@@ -139,12 +149,16 @@ class _CategoryCardState extends State<CategoryCard> {
                 ],
               ),
               actions: [
-                TextButton(
+                ElevatedButton(
                   onPressed: alertcompany,
-                  child: const Text(
-                    "Send",
-                    style: TextStyle(color: Colors.redAccent),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green
                   ),
+                  child: const Icon(Icons.send, color: Colors.white,),
+                  // child: const Text(
+                  //   "Alert Company",
+                  //   style: TextStyle(color: Colors.white),
+                  // ),
                 ),
               ],
             );

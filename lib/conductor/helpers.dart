@@ -37,3 +37,29 @@ class Conductor {
     // }
   }
 }
+
+class Passengerhelper{
+  Future<String?> getIdImage(String id) async{
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection('passengers').doc(id).get();
+
+    if(snapshot.exists){
+      var data = snapshot.data() as Map<String, dynamic>;
+      print(data['id']);
+
+      return data['id'];
+    }
+    return null;
+  }
+
+  Future<String?> gettype(String id) async{
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection('passengers').doc(id).get();
+
+    if(snapshot.exists){
+      var data = snapshot.data() as Map<String, dynamic>;
+      print(data['id']);
+
+      return data['type'];
+    }
+    return null;
+  }
+}

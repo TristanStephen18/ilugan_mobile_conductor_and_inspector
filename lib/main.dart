@@ -1,8 +1,9 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
+// import 'package:awesome_notifications/awesome_notifications.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/alerting.dart';
+// import 'package:iluganmobile_conductors_and_inspector/conductor/alerting.dart';
+import 'package:iluganmobile_conductors_and_inspector/helpers/notifications.dart';
 // import 'package:iluganmobile_conductors_and_inspector/AuthService.dart';
 // import 'package:iluganmobile_conductors_and_inspector/helpers/screenselector.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/index.dart';
@@ -15,18 +16,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // AwesomeNotifications().initialize(
-  //   null,  // Set your notification icon here
-  //   [
-  //     NotificationChannel(
-  //       channelKey: 'basic_channel',
-  //       channelName: 'Basic notifications',
-  //       channelDescription: 'Notification channel for basic tests',
-  //       defaultColor: const Color(0xFF9D50DD),
-  //       ledColor: Colors.white,
-  //     )
-  //   ],
-  // );
+  Notifications.initializenotifications();
   runApp(const MainApp());
 }
 

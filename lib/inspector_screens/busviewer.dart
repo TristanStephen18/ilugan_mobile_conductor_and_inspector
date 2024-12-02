@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors_in_immutables
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -51,20 +53,28 @@ class _BusesScreenState extends State<BusesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 218, 218, 218),
       appBar: AppBar(
-        backgroundColor: Colors.redAccent,
         centerTitle: true,
-        title: const Text("Buses", style: TextStyle(color: Colors.white)),
+        toolbarHeight: 50,
+        title: CustomText(
+          content: 'Buses'.toUpperCase(),
+          fsize: 20,
+          fontcolor: Colors.white,
+          fontweight: FontWeight.w500,
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),  
         actions: const [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Image(
-              image: AssetImage("assets/images/logo.png"),
-              height: 50,
-              width: 50,
-            ),
+          Image(
+            image: AssetImage("assets/images/logo.png"),
+            height: 50,
+            width: 50,
           ),
         ],
+        backgroundColor: Colors.green,
       ),
       body: _busData.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -145,11 +155,11 @@ class _BusesScreenState extends State<BusesScreen> {
                         busnum: _busData[_currentIndex]['plate_number'],
                         compId: widget.compId)));
               },
-              label: 'View in Map',
-              bcolor: Colors.greenAccent,
-              fcolor: Colors.black,
+              label: 'View in Map'.toUpperCase(),
+              bcolor: const Color.fromARGB(255, 67, 155, 70),
+              fcolor: Colors.white,
               fontweight: FontWeight.bold,
-              height: 50,
+              height: 60,
               tsize: 22,
               width: MediaQuery.of(context).size.width - 50,
             ),
@@ -215,19 +225,19 @@ class _BusesScreenState extends State<BusesScreen> {
               _buildSeatInfoCard(
                 title: "Seats Available",
                 value: bus['available_seats'].toString(),
-                backgroundColor: Colors.greenAccent,
+                backgroundColor: const Color.fromARGB(255, 67, 155, 70),
                 valueColor: Colors.white,
               ),
               Column(
                 children: [
                   _buildSeatStatusCard(
-                    backgroundColor: Colors.yellow,
+                    backgroundColor: const Color.fromARGB(255, 84, 124, 86),
                     title: "Reserved",
                     value: bus['reserved_seats'].toString(),
                   ),
                   const Gap(10),
                   _buildSeatStatusCard(
-                    backgroundColor: Colors.green,
+                    backgroundColor: Colors.black,
                     title: "Occupied",
                     value: bus['occupied_seats'].toString(),
                   ),
@@ -259,17 +269,20 @@ class _BusesScreenState extends State<BusesScreen> {
           CustomText(
             content: title,
             fsize: 15,
+            fontcolor: Colors.white,
             fontweight: FontWeight.bold,
           ),
           const Gap(10),
           CustomText(
             content: value,
             fsize: 50,
+            fontcolor: Colors.white,
           ),
           const Gap(10),
           CustomText(
             content: "Total seats : 42",
             fsize: 20,
+            fontcolor: Colors.white,
           ),
         ],
       ),
@@ -295,12 +308,14 @@ class _BusesScreenState extends State<BusesScreen> {
             content: title,
             fsize: 15,
             fontweight: FontWeight.bold,
+            fontcolor: Colors.white,
           ),
           const Gap(5),
           CustomText(
             content: value,
             fsize: 20,
             fontweight: FontWeight.bold,
+            fontcolor: Colors.white,
           ),
         ],
       ),

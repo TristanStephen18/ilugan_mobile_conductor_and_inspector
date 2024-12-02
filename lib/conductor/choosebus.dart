@@ -103,13 +103,13 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
         title: CustomText(
           content: 'Conductor',
           fsize: 30,
-          fontcolor: Colors.yellowAccent,
+          fontcolor: Colors.white,
           fontweight: FontWeight.w500,
         ),
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios,
-            color: Colors.yellow,
+            color: Colors.white,
           ),
           onPressed: () {
             Navigator.pop(context);
@@ -123,7 +123,7 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
           ),
           Gap(10)
         ],
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.green,
       ),
       body: busList.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -149,15 +149,16 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
                             choice = selectedBus;
                           });
                         },
+                        
                   child: Container(
                     decoration: BoxDecoration(
                       color: isAssigned
                           ? const Color.fromARGB(255, 136, 134, 134)
                           : (selectedBus == busNumber
-                              ? Colors.redAccent
+                              ? Colors.green
                               : Colors.white),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.black, width: 2),
+                      border: Border.all(color: Colors.black, width: 0.1),
                     ),
                     child: Center(
                       child: Column(
@@ -193,7 +194,7 @@ class _ChooseBusScreenState extends State<ChooseBusScreen> {
                   ),
                 );
               },
-              child: const Icon(Icons.arrow_forward),
+              child: const Icon(Icons.arrow_forward, color: Colors.green,),
             )
           : null,
     );

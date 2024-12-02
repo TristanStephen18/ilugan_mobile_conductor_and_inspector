@@ -14,7 +14,15 @@ class Auth {
     print('Data updated');
   }
 
-  void onBusChosen(String compID, String empID) {
+  Future<void> onBusChosen(String compID, String empID) async{
+   await FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
+      "status" : "active"
+    });
+
+    print('Is active');
+  }
+  
+  Future<void> oninspectorlogin(String compID, String empID)async {
     FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
       "status" : "active"
     });
@@ -22,4 +30,11 @@ class Auth {
     print('Is active');
   }
 
+  Future<void> oninspectorlogout(String compID, String empID) async {
+    FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
+      "status" : "inactive"
+    });
+
+    print('Is active');
+  }
 }

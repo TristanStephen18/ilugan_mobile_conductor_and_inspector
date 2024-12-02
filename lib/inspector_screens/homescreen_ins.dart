@@ -1,14 +1,17 @@
-// ignore_for_file: use_build_context_synchronously, must_be_immutable, camel_case_types
+// ignore_for_file: use_build_context_synchronously, must_be_immutable, camel_case_types, deprecated_member_use
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 // import 'package:gap/gap.dart';
 import 'package:geolocator/geolocator.dart';
 // import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/auth.dart';
 import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/fetching.dart';
 import 'package:iluganmobile_conductors_and_inspector/helpers/busfunctions.dart';
+import 'package:iluganmobile_conductors_and_inspector/inspector_screens/displayer.dart';
 import 'package:iluganmobile_conductors_and_inspector/screens/loginscreen.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 // import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
@@ -24,12 +27,13 @@ class Dashboard_Ins extends StatefulWidget {
 
 class _Dashboard_InsState extends State<Dashboard_Ins> {
   BitmapDescriptor markerIcon = BitmapDescriptor.defaultMarker;
-  Set<Marker> markers = {}; 
+  Set<Marker> markers = {};
   late GoogleMapController mapController;
 
   @override
   void initState() {
     super.initState();
+    _loadCustomMarkers();
     // customIcon();
     listenToBusLocations();
     getCurrentLocation();
@@ -46,27 +50,29 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
   Future<void> getuserdata() async {
     var data = await Data().getEmployeeData(widget.compId);
     if (mounted) {
-      setState(() {
-        email = data?['email'];
-        name = data?['name'];
-        id = data?['id'];
-        // busNum = data?['inbus'];
-        companyId = data?['companyid'];
-      });
+      // setState(() {
+      // });
 
       // getBusRealtimeData(companyId.toString(), busNum.toString());
-      String? cname = await Data().getcompanyname(companyId.toString());
+      String? cname = await Data().getcompanyname(widget.compId);
       if (mounted) {
         setState(() {
+          email = data?['email'];
+          name = data?['name'];
+          id = data?['id'];
+          // busNum = data?['inbus'];
+          companyId = data?['companyid'];
           comapnyname = cname;
         });
+
+        // await Auth().oninspectorlogin(widget.compId, id);
       }
     }
   }
 
   // void customIcon() {
   //   BitmapDescriptor.fromAssetImage(
-  //     const ImageConfiguration(size: Size(20, 20)), 
+  //     const ImageConfiguration(size: Size(20, 20)),
   //     "assets/images/icons/bicon.png"
   //   ).then((icon) {
   //     setState(() {
@@ -178,7 +184,7 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
   //                         width: 70,
   //                         decoration: const BoxDecoration(
   //                           color: Color.fromARGB(255, 148, 150, 42)
-  //                         ),  
+  //                         ),
   //                         child: Center(
   //                           child: Text(reserved.toString(), style: const TextStyle(
   //                             fontSize: 35
@@ -193,7 +199,7 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
   //               OutlinedButton(onPressed: (){
   //                 // Navigator.of(context).pop();
   //                 // Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>BDetailsScreen()));
-  //               }, 
+  //               },
   //               style: OutlinedButton.styleFrom(
   //                 backgroundColor: Colors.white,
   //                 foregroundColor: Colors.black,
@@ -213,52 +219,108 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
   // }
 
   void listenToBusLocations() {
-  FirebaseFirestore.instance
-      .collection('companies')
-      .doc(widget.compId)
-      .collection('buses')
-      .snapshots()
-      .listen((snapshot) {
-    markers.removeWhere((marker) => marker.markerId.value.startsWith('bus_'));
+    FirebaseFirestore.instance
+        .collection('companies')
+        .doc(widget.compId)
+        .collection('buses')
+        .snapshots()
+        .listen((snapshot) async {
+      markers.removeWhere((marker) => marker.markerId.value.startsWith('bus_'));
 
-    for (var doc in snapshot.docs) {
-      var data = doc.data();
-      GeoPoint geoPoint = data['current_location'];
-      String busNumber = data['bus_number'];
-      String plateNumber = data['plate_number'];
-      int availableseats = data['available_seats'];
-      int occupied = data['occupied_seats'];
-      int reserved = data['reserved_seats'];
+      for (var doc in snapshot.docs) {
+        var data = doc.data();
+        print(doc.data());
+        String busNumber = data['bus_number'] ?? '';
 
-      LatLng position = LatLng(geoPoint.latitude, geoPoint.longitude);
-      BusFunc().reverseGeocode(position.latitude, position.longitude).then((address) {
-        markers.add(
-        Marker(
-          markerId: MarkerId('bus_${doc.id}'),
-          position: position,
-          onTap: () {
-            // Format the GeoPoint as a meaningful string
-            String currentLocation =
-                "Lat: ${geoPoint.latitude}, Lon: ${geoPoint.longitude}";
+        String plateNumber = data['plate_number'] ?? '';
+        int availableSeats = data['available_seats'] ?? 0;
+        int occupiedSeats = data['occupied_seats'] ?? 0;
+        int reservedSeats = data['reserved_seats'] ?? 0;
+        GeoPoint geoPoint = data['current_location'] ?? const GeoPoint(0, 0);
+         GeoPoint geoPointd = data['destination_coordinates'] ?? const GeoPoint(0, 0);
+        LatLng currentLocation = LatLng(geoPoint.latitude, geoPoint.longitude);
+        LatLng destinationLocation = LatLng(geoPointd.latitude, geoPointd.longitude);
 
-            // Call the showbusinfo function from BusFunc
-            // showbusinfo(
-            //   'Dagupan Bus',  // Company ID
-            //   busNumber,      // Bus number
-            //   address, // Formatted location
-            //   availableseats, // Available seats
-            //   occupied,       // Occupied seats
-            //   reserved
-            //   );
-          },
-          icon: markerIcon,
-        ),
+        String locationaddress = await BusFunc().reverseGeocode(currentLocation.latitude, currentLocation.longitude);
+
+        // LatLng position = LatLng(geoPoint.latitude, geoPoint.longitude);
+        // BusFunc()
+        //     .reverseGeocode(position.latitude, position.longitude)
+        //     .then((address) {
+          markers.add(
+            Marker(
+              markerId: MarkerId('bus_${doc.id}'),
+              position: currentLocation,
+              onTap: () {
+                print(address);
+                // Format the GeoPoint as a meaningful string
+                // String currentLocation =
+                //     "Lat: ${geoPoint.latitude}, Lon: ${geoPoint.longitude}";
+
+                DisplayItems().showBusInfoDialog(
+                  context,
+                    'Dagupan Bus Inc.',
+                    busNumber,
+                    plateNumber,
+                    locationaddress,
+                    availableSeats,
+                    occupiedSeats,
+                    reservedSeats,
+                    destinationLocation,
+                    currentLocation,
+                    widget.compId
+                    );
+
+                // Call the showbusinfo function from BusFunc
+                // showbusinfo(
+                //   'Dagupan Bus',  // Company ID
+                //   busNumber,      // Bus number
+                //   address, // Formatted location
+                //   availableseats, // Available seats
+                //   occupied,       // Occupied seats
+                //   reserved
+                //   );
+              },
+              icon: assignedBusMarker,
+            ),
+          );
+          setState(() {});
+        // });
+      } // Trigger UI update
+    });
+  }
+
+  BitmapDescriptor movingbusMarker = BitmapDescriptor.defaultMarker;
+  BitmapDescriptor assignedBusMarker = BitmapDescriptor.defaultMarker;
+
+  Future<void> _loadCustomMarkers() async {
+    try {
+      movingbusMarker = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(devicePixelRatio: 2.2),
+        "assets/images/icons/movingbus.bmp",
       );
-      setState(() {}); 
-      });
-    }// Trigger UI update
-  });
-}
+      assignedBusMarker = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(devicePixelRatio: 4.5),
+        "assets/images/icons/mbus.bmp",
+      );
+      if (mounted) {
+        setState(() {}); // Update the UI with loaded markers
+      }
+    } catch (e) {
+      print("Error loading custom icons: $e");
+    }
+  }
+
+  String? address;
+
+  void getcurrentlocationaddress(LatLng position) async {
+    String? add =
+        await BusFunc().reverseGeocode(position.latitude, position.longitude);
+
+    setState(() {
+      address = add;
+    });
+  }
 
   void getCurrentLocation() async {
     if (!await checkServicePermission()) return;
@@ -270,30 +332,33 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
       ),
     ).listen((position) {
       LatLng currentPosition = LatLng(position.latitude, position.longitude);
-      markers.removeWhere((marker) => marker.markerId.value == 'user_location');
-      markers.add(
-        Marker(
-          markerId: const MarkerId('user_location'),
-          position: currentPosition,
-          infoWindow: const InfoWindow(title: 'You are here'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        ),
-      );
-      setToLocation(currentPosition); 
+      // markers.removeWhere((marker) => marker.markerId.value == 'user_location');
+      // markers.add(
+      //   Marker(
+      //     markerId: const MarkerId('user_location'),
+      //     position: currentPosition,
+      //     infoWindow: const InfoWindow(title: 'You are here'),
+      //     icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      //   ),
+      // );
+      getcurrentlocationaddress(currentPosition);
+      setToLocation(currentPosition);
     });
   }
 
   void setToLocation(LatLng position) {
     CameraPosition cameraPosition = CameraPosition(target: position, zoom: 14);
     mapController.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
-    setState(() {}); 
+    setState(() {});
   }
 
   Future<bool> checkServicePermission() async {
     bool isEnabled = await Geolocator.isLocationServiceEnabled();
     if (!isEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location services are disabled. Please enable them.')),
+        const SnackBar(
+            content:
+                Text('Location services are disabled. Please enable them.')),
       );
       return false;
     }
@@ -309,7 +374,8 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
     }
     if (permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location permission permanently denied.')),
+        const SnackBar(
+            content: Text('Location permission permanently denied.')),
       );
       return false;
     }
@@ -317,34 +383,97 @@ class _Dashboard_InsState extends State<Dashboard_Ins> {
   }
 
   void logout() async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+    await Auth().oninspectorlogout(
+        widget.compId, FirebaseAuth.instance.currentUser!.uid);
+    await FirebaseAuth.instance.signOut().then((val) async {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+
+    if(address == null){
+      getCurrentLocation();
+    }
+
     return SafeArea(
       child: Scaffold(
-        drawer: InsAppdrawers(logoutfunc: logout, compID: companyId, insid: id, insname: name,),
+        drawer: InsAppdrawers(
+          logoutfunc: logout,
+          compID: companyId,
+          insid: id,
+          insname: name,
+        ),
         appBar: AppBar(
-          title: const Text('Inspector Dashboard'),
           centerTitle: true,
+          toolbarHeight: 60,
+          title: CustomText(
+            content:
+                comapnyname != null ? comapnyname.toString() : 'Loading...',
+            fsize: 20,
+            fontcolor: Colors.white,
+            fontweight: FontWeight.w500,
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
+          actions: const [
+            Image(
+              image: AssetImage("assets/images/logo.png"),
+              height: 50,
+              width: 50,
+            ),
+            Gap(10)
+          ],
+          backgroundColor: Colors.green,
         ),
         body: SafeArea(
-          child: GoogleMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(15.975949534874196, 120.57135500752592),
-              zoom: 15,
-            ),
-            mapType: MapType.normal,
-            onMapCreated: (controller) {
-              mapController = controller;
-            },
-            markers: markers,
-            myLocationButtonEnabled: true,
-            myLocationEnabled: true,
+          child: Stack(
+            children: [
+              GoogleMap(
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(15.975949534874196, 120.57135500752592),
+                  zoom: 15,
+                ),
+                mapType: MapType.normal,
+                onMapCreated: (controller) {
+                  mapController = controller;
+                },
+                markers: markers,
+                myLocationButtonEnabled: true,
+                myLocationEnabled: true,
+              ),
+              Positioned(
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: address != null ? Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.location_pin),
+                              CustomText(content: 'Currently at')
+                            ],
+                          ),
+                          const Gap(10),
+                          CustomText(
+                            content: address.toString(),
+                            fontweight: FontWeight.w800,
+                          ),
+                        ],
+                      ) : const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ))
+            ],
           ),
         ),
       ),
