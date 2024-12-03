@@ -39,6 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? conId;
   String? status;
   String? inbus;
+  String? userid;
 
   Future<bool> searchUsers(email, password) async {
     try {
@@ -51,6 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
       for (var doc in docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         if (data['email'] == email) {
+          userid = doc.id;
           user_email = data['email'];
           commpId = data['companyId'];
           name = data['employee_name'];
@@ -101,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .then((UserCredential cred) async {
         Navigator.of(context).pop();
         if(type == 'conductor'){
+          await Auth().onBusChosen(commpId.toString(), FirebaseAuth.instance.currentUser!.uid);
           Navigator.of(context).push(MaterialPageRoute(builder: (_)=>Dashboard_Con(compId: commpId.toString(), bus_num: inbus, conID: conId)));
           // Navigator.of(context).push(CupertinoPageRoute(builder: (_)=>ChooseBusScreen(compId: commpId as String, conductorId: cred.user!.uid, conname: name as String,)));
         }else{
