@@ -38,6 +38,7 @@ class _SeatManagementScreenState extends State<SeatManagementScreen> {
           totalSeats = (snapshot.data() as Map<String, dynamic>)['total_seats'];
         });
       }
+      print('Has Seats');
     } catch (error) {
       print("Error fetching seat data: $error");
     }
@@ -67,79 +68,78 @@ class _SeatManagementScreenState extends State<SeatManagementScreen> {
 
   @override
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      centerTitle: true,
-      toolbarHeight: 50,
-      title: CustomText(
-        content: 'Seat Viewer',
-        fsize: 20,
-        fontcolor: Colors.white,
-        fontweight: FontWeight.w500,
-      ),
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_ios,
-          color: Colors.white,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        toolbarHeight: 50,
+        title: CustomText(
+          content: 'Seat Viewer',
+          fsize: 20,
+          fontcolor: Colors.white,
+          fontweight: FontWeight.w500,
         ),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
-      actions: const [
-        Image(
-          image: AssetImage("assets/images/logo.png"),
-          height: 50,
-          width: 50,
-        ),
-      ],
-      backgroundColor: Colors.green,
-    ),
-    body: totalSeats == null
-        ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Seat Layout
-                SizedBox(
-                  height: 600, // Set a fixed height for the seat layout
-                  child: buildSeatLayout(totalSeats!),
-                ),
-                const SizedBox(height: 20),
-                // Legends Section
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      buildLegend('Available', Colors.green),
-                      buildLegend('Occupied', Colors.redAccent),
-                      buildLegend('Reserved', Colors.greenAccent),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
           ),
-  );
-}
-
-Widget buildLegend(String label, Color color) {
-  return Row(
-    children: [
-      Container(
-        width: 20,
-        height: 20,
-        color: color,
-        margin: const EdgeInsets.only(right: 8.0),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        actions: const [
+          Image(
+            image: AssetImage("assets/images/logo.png"),
+            height: 50,
+            width: 50,
+          ),
+        ],
+        backgroundColor: Colors.green,
       ),
-      CustomText(content: label, fsize: 16, fontcolor: Colors.black),
-    ],
-  );
-}
+      body: totalSeats == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Seat Layout
+                  SizedBox(
+                    height: 600, // Set a fixed height for the seat layout
+                    child: buildSeatLayout(totalSeats!),
+                  ),
+                  const SizedBox(height: 20),
+                  // Legends Section
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        buildLegend('Available', Colors.green),
+                        buildLegend('Occupied', Colors.redAccent),
+                        buildLegend('Reserved', Colors.yellow),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
 
+  Widget buildLegend(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          color: color,
+          margin: const EdgeInsets.only(right: 8.0),
+        ),
+        CustomText(content: label, fsize: 16, fontcolor: Colors.black),
+      ],
+    );
+  }
 
   Widget buildSeatLayout(int totalSeats) {
     int fullRows = ((totalSeats - 5) / 4).ceil(); // Rows with 4 seats each
@@ -178,33 +178,103 @@ Widget buildLegend(String label, Color color) {
   Widget buildSeatIcon(int seatNumber) {
     String seatStatus = seatStatuses[seatNumber] ?? 'unknown';
 
-    return Container(
-      margin: const EdgeInsets.all(4.0),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(5),
-        color: seatStatus == 'available'
-            ? Colors.green
-            : seatStatus == 'occupied'
-                ? Colors.red
-                : Colors.greenAccent, // Default for unknown status
-      ),
-      width: 50,
-      height: 60,
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.chair,
-            color: Colors.white,
-          ),
-          Text(
-            "$seatNumber",
-            style: const TextStyle(fontSize: 16, color: Colors.white),
-          ),
-        ],
+    return GestureDetector(
+      onTap: () {
+        showUpdateStatusDialog(seatNumber, seatStatus);
+      },
+      child: Container(
+        margin: const EdgeInsets.all(4.0),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(5),
+          color: seatStatus == 'available'
+              ? Colors.green
+              : seatStatus == 'occupied'
+                  ? Colors.red
+                  : Colors.yellow, // Default for unknown status
+        ),
+        width: 50,
+        height: 60,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.chair,
+              color: Colors.white,
+            ),
+            Text(
+              "$seatNumber",
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void showUpdateStatusDialog(int seatNumber, String currentStatus) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Update Seat $seatNumber status'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Available'),
+                leading: Radio<String>(
+                  value: 'available',
+                  groupValue: currentStatus,
+                  onChanged: (value) {
+                    Navigator.pop(context); // Close dialog
+                    updateSeatStatus(seatNumber, value!);
+                  },
+                ),
+              ),
+              ListTile(
+                title: const Text('Occupied'),
+                leading: Radio<String>(
+                  value: 'occupied',
+                  groupValue: currentStatus,
+                  onChanged: (value) {
+                    Navigator.pop(context); // Close dialog
+                    updateSeatStatus(seatNumber, value!);
+                  },
+                ),
+              ),
+              ListTile(
+                title: const Text('Reserved'),
+                leading: Radio<String>(
+                  value: 'reserved',
+                  groupValue: currentStatus,
+                  onChanged: (value) {
+                    Navigator.pop(context); // Close dialog
+                    updateSeatStatus(seatNumber, value!);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> updateSeatStatus(int seatNumber, String newStatus) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('companies')
+          .doc(widget.compId)
+          .collection('buses')
+          .doc(widget.busnum)
+          .collection('seats')
+          .doc(seatNumber.toString())
+          .update({'status': newStatus});
+      print('Seat $seatNumber updated to $newStatus');
+    } catch (error) {
+      print('Error updating seat $seatNumber: $error');
+    }
   }
 }

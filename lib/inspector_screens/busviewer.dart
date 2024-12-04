@@ -150,6 +150,7 @@ class _BusesScreenState extends State<BusesScreen> {
             const Gap(20),
             Ebuttons(
               func: () {
+                // print();
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => BusViewer(
                         busnum: _busData[_currentIndex]['plate_number'],
@@ -216,6 +217,13 @@ class _BusesScreenState extends State<BusesScreen> {
                   CustomText(content: bus['destination'] ?? 'N/A'),
                 ],
               ),
+            ],
+          ),
+          const Gap(5),
+          Row(
+            children: [
+              const Icon(Icons.directions),
+              CustomText(content: 'VIA: ${bus['via']}', fsize: 15,),
             ],
           ),
           const Gap(10),

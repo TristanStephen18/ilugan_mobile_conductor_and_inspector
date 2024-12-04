@@ -23,7 +23,8 @@ class Auth {
   }
   
   Future<void> oninspectorlogin(String compID, String empID)async {
-    FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
+    print('Logging out');
+    await FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
       "status" : "active"
     });
 
@@ -31,7 +32,7 @@ class Auth {
   }
 
   Future<void> oninspectorlogout(String compID, String empID) async {
-    FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
+   await FirebaseFirestore.instance.collection('companies').doc(compID).collection('employees').doc(empID).update({ 
       "status" : "inactive"
     });
 

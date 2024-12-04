@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/alerting.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/conductorprofile.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/seatmanagement.dart';
+import 'package:iluganmobile_conductors_and_inspector/conductor/viewreservationrequests.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/busviewer.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/holderfile.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/profile.dart';
@@ -135,7 +136,22 @@ class Appdrawers extends StatelessWidget {
                   ),
                   hoverColor: Colors.green,
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=> SeatManagementScreen(compId: compID, busnum: busnum,)));
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=> SeatManagementScreen(compId: compID, busnum: busnum)));
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  title: CustomText(
+                    content: 'Reservation Requests',
+                    fontcolor: const Color.fromARGB(255, 104, 103, 103),
+                  ),
+                  leading: const Icon(
+                    Icons.list_alt,  
+                    color: Colors.green,
+                  ),
+                  hoverColor: Colors.green,
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_)=> ReseravtionRequestsHolderScreen(compId: compID, busnum: busnum,)));
                   },
                 ),
               ],

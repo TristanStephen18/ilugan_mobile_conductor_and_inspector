@@ -276,6 +276,8 @@ Future<void> logout() async {
   }
 
   Future<void> _logoutOnly() async {
+    // await Auth().onLogout(widget.compId, busNum.toString(),
+    //     FirebaseAuth.instance.currentUser!.uid);
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(

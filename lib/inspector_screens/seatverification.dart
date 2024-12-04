@@ -1,11 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
-import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/fetching.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iluganmobile_conductors_and_inspector/widgets/widgets.dart';
 
 class SeatverificationScreen extends StatefulWidget {
-  SeatverificationScreen({super.key, required this.compid, required this.busid});
+  const SeatverificationScreen({
+    super.key,
+    required this.compid,
+    required this.busid,
+  });
 
   final String compid;
   final String busid;
@@ -15,46 +17,83 @@ class SeatverificationScreen extends StatefulWidget {
 }
 
 class _SeatverificationScreenState extends State<SeatverificationScreen> {
-  String? id;
+  int? totalSeats;
+  Map<int, String> seatStatuses = {};
 
   @override
   void initState() {
     super.initState();
-    getid();
+    fetchSeatData();
+    setupSeatStatusListener();
   }
 
-  void getid() async {
-    String? response = await Data().getEmpId(widget.compid);
-    setState(() {
-      id = response;
+  Future<void> fetchSeatData() async {
+    try {
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('companies')
+          .doc(widget.compid)
+          .collection('buses')
+          .doc(widget.busid)
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          totalSeats = (snapshot.data() as Map<String, dynamic>)['total_seats'];
+        });
+      }
+    } catch (error) {
+      print("Error fetching seat data: $error");
+    }
+  }
+
+  void setupSeatStatusListener() {
+    try{
+      FirebaseFirestore.instance
+        .collection('companies')
+        .doc(widget.compid)
+        .collection('buses')
+        .doc(widget.busid)
+        .collection('seats')
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      Map<int, String> updatedStatuses = {};
+      for (var doc in snapshot.docs) {
+        int seatNumber = int.parse(doc.id);
+        String status = (doc.data() as Map<String, dynamic>)['status'];
+        updatedStatuses[seatNumber] = status;
+      }
+      setState(() {
+        seatStatuses = updatedStatuses;
+      });
+      print(seatStatuses);
     });
+    }catch(error){
+      print(error);
+    }
   }
 
   Future<void> _onYesPressed() async {
-    print('click');
+    // Update inspection details for validation passed
     try {
-      // Update the `inspected_by` field in the bus document
       await FirebaseFirestore.instance
           .collection('companies')
           .doc(widget.compid)
           .collection('buses')
           .doc(widget.busid)
-          .update({'inspected_by': id});
+          .update({'inspected_by': 'Inspector'});
 
-      // Add an inspection alert with validation passed and empty reason
       await FirebaseFirestore.instance
           .collection('companies')
           .doc(widget.compid)
           .collection('inspectionalerts')
           .add({
         'busnumber': widget.busid,
-        'context': 'Inspected by $id',
+        'context': 'Inspected and validated',
         'validation': 'passed',
         'reason': '',
-        'datetime': DateTime.now()
+        'datetime': DateTime.now(),
       });
 
-      // Show success alert
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -76,7 +115,6 @@ class _SeatverificationScreenState extends State<SeatverificationScreen> {
   Future<void> _onNoPressed() async {
     TextEditingController reasonController = TextEditingController();
 
-    // Show dialog to get the reason
     showDialog(
       context: context,
       builder: (context) {
@@ -95,25 +133,21 @@ class _SeatverificationScreenState extends State<SeatverificationScreen> {
             ),
             TextButton(
               onPressed: () async {
-                // Get reason and close dialog
-                String reason = reasonController.text;
                 Navigator.pop(context);
 
                 try {
-                  // Add an inspection alert with validation failed and provided reason
                   await FirebaseFirestore.instance
                       .collection('companies')
                       .doc(widget.compid)
                       .collection('inspectionalerts')
                       .add({
                     'busnumber': widget.busid,
-                    'context': 'Inspected by $id',
+                    'context': 'Inspection failed',
                     'validation': 'failed',
-                    'reason': reason,
-                    'datetime': DateTime.now()
+                    'reason': reasonController.text,
+                    'datetime': DateTime.now(),
                   });
 
-                  // Show success alert
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -144,164 +178,161 @@ class _SeatverificationScreenState extends State<SeatverificationScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        toolbarHeight: 60,
+        toolbarHeight: 50,
         title: CustomText(
-          content: widget.busid,
+          content: 'Bus: ${widget.busid}',
           fsize: 20,
           fontcolor: Colors.white,
           fontweight: FontWeight.w500,
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        actions: const [
-          Image(
-            image: AssetImage("assets/images/logo.png"),
-            height: 50,
-            width: 50,
-          ),
-          Gap(10),
-        ],
         backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          children: [
-            const Center(
-              child: Image(
-                image: AssetImage('assets/images/icons/choose.png'),
-                width: 200,
-                height: 200,
+      body: totalSeats == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Dynamic Seat Layout
+                  SizedBox(
+                    height: 600,
+                    child: buildSeatLayout(totalSeats!),
+                  ),
+                  const SizedBox(height: 20),
+                  // Legends
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        buildLegend('Available', Colors.green),
+                        buildLegend('Occupied', Colors.redAccent),
+                        buildLegend('Reserved', Colors.yellow),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Verification Buttons
+                   CustomText(
+                    content: 'Is the seat information correct?',
+                    fsize: 17,
+                    fontweight: FontWeight.bold,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => _onYesPressed(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
+                        child: const Text(
+                          'Yes',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      ElevatedButton(
+                        onPressed: () => _onNoPressed(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        child: const Text(
+                          'No',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const Gap(20),
-            StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('companies')
-                  .doc(widget.compid)
-                  .collection('buses')
-                  .doc(widget.busid)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Center(child: Text('Bus not found'));
-                }
-
-                var busdata = snapshot.data!.data() as Map<String, dynamic>;
-                int reservedSeats = busdata['reserved_seats'] ?? 0;
-                int occupiedSeats = busdata['occupied_seats'] ?? 0;
-                int availableSeats = busdata['available_seats'] ?? 0;
-
-                return Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildSeatInfoCard(
-                          title: 'Reserved',
-                          count: reservedSeats,
-                          color: const Color.fromARGB(255, 86, 143, 60),
-                        ),
-                        _buildSeatInfoCard(
-                          title: 'Occupied',
-                          count: occupiedSeats,
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                        ),
-                        _buildSeatInfoCard(
-                          title: 'Available',
-                          count: availableSeats,
-                          color: Colors.green,
-                        ),
-                      ],
-                    ),
-                    const Gap(30),
-                    const Text(
-                      'Is the seat information correct?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Gap(270),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _onYesPressed,
-                            style: ElevatedButton.styleFrom(
-                              textStyle: const TextStyle(color: Colors.white),
-                              backgroundColor: Colors.green,
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                            ),
-                            child: const Text(
-                              'Yes',
-                              style: TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        const Gap(20),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _onNoPressed,
-                            style: ElevatedButton.styleFrom(
-                              textStyle: const TextStyle(color: Colors.white),
-                              backgroundColor: Colors.red,
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                            ),
-                            child: const Text(
-                              'No',
-                              style: TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildSeatInfoCard({required String title, required int count, required Color color}) {
+  Widget buildLegend(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          color: color,
+          margin: const EdgeInsets.only(right: 8.0),
+        ),
+        CustomText(content: label, fsize: 16, fontcolor: Colors.black),
+      ],
+    );
+  }
+
+  Widget buildSeatLayout(int totalSeats) {
+    int fullRows = ((totalSeats - 5) / 4).ceil(); // Rows with 4 seats each
+    int totalRows = fullRows + 1; // Include the back row
+
+    return ListView.builder(
+      itemCount: totalRows,
+      itemBuilder: (context, rowIndex) {
+        if (rowIndex == totalRows - 1) {
+          // Last row with 5 seats
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(
+              5,
+              (index) => buildSeatIcon((fullRows * 4) + index + 1),
+            ),
+          );
+        } else {
+          // Regular 2x2 layout
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ...List.generate(
+                2,
+                (index) => buildSeatIcon(rowIndex * 4 + index + 1),
+              ),
+              const SizedBox(width: 20), // Aisle space
+              ...List.generate(
+                2,
+                (index) => buildSeatIcon(rowIndex * 4 + 2 + index + 1),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget buildSeatIcon(int seatNumber) {
+    String seatStatus = seatStatuses[seatNumber] ?? 'unknown';
+
     return Container(
-      width: 110,
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(4.0),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(5),
+        color: seatStatus == 'available'
+            ? Colors.green
+            : seatStatus == 'occupied'
+                ? Colors.red
+                : Colors.yellow, // Default for unknown status
       ),
+      width: 50,
+      height: 60,
+      alignment: Alignment.center,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const Icon(Icons.chair, color: Colors.white),
           Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Gap(8),
-          Text(
-            count.toString(),
-            style: const TextStyle(
-              fontSize: 28,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            "$seatNumber",
+            style: const TextStyle(fontSize: 16, color: Colors.white),
           ),
         ],
       ),

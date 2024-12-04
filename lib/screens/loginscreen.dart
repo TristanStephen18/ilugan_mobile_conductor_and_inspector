@@ -5,8 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/choosebus.dart';
-import 'package:iluganmobile_conductors_and_inspector/conductor/helpers.dart';
+// import 'package:iluganmobile_conductors_and_inspector/conductor/choosebus.dart';
+// import 'package:iluganmobile_conductors_and_inspector/conductor/helpers.dart';
 import 'package:iluganmobile_conductors_and_inspector/conductor/homescreen_con.dart';
 import 'package:iluganmobile_conductors_and_inspector/firebase_helpers/auth.dart';
 import 'package:iluganmobile_conductors_and_inspector/inspector_screens/homescreen_ins.dart';
@@ -95,6 +95,14 @@ class _LoginScreenState extends State<LoginScreen> {
           type: QuickAlertType.error,
           text: "This account has been disabled",
           title: "Account Info",
+        );
+      }else if(inbus == ""){
+        Navigator.of(context).pop();
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          text: "You have not been assigned to any bus yet",
+          title: "Log in Info",
         );
       }else{
         await FirebaseAuth.instance
