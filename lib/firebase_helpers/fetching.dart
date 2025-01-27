@@ -57,6 +57,7 @@ Future<String?> getcompanyname(String id)async {
       }else{
         print('error fetching comapny name');
       }
+      return null;
 }
 
 Future<String?> getEmpId(String companyId) async {

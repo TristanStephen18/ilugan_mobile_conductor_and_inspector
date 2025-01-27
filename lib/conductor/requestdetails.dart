@@ -18,7 +18,7 @@ class RequestDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    Theme.of(context);
     final idsField = request['ids'] as String;
     return Scaffold(
       appBar: AppBar(

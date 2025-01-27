@@ -10,7 +10,9 @@ class Auth {
       'inbus': "", 
       "status" : "inactive"
     });
-
+    await FirebaseFirestore.instance.collection('ilugan_mobile_users').doc(empID).update({
+      "inbus" : ""
+    });
     print('Data updated');
   }
 
